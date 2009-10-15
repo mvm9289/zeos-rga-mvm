@@ -2,9 +2,6 @@
 #include <types.h>
 #include <mm_address.h>
 
-#define READ 0
-#define WRITE 1
-
 void copy_data(void *start, void *dest, int size)
 {
     DWord *p = start, *q = dest;

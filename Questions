@@ -1,5 +1,1 @@
-access_ok correcta?
-access_ok en el write, retorna EINVAL?
-alloc_frame == -1 retorna ENOMEM?
-liberar espacio si tenemos ENOMEM en fork?
-listas runqueve diferencia understanding/transpas
+

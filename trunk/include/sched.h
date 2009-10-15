@@ -14,20 +14,14 @@
 #define FREE 0
 #define ALLOC 1
 
-#define STD_QUANTUM 69
+#define STD_QUANTUM 55
 
 extern unsigned int set_eoi;
 extern unsigned long next_child_pid;
 extern unsigned long life;
 extern struct list_head runqueue;
-
 extern unsigned int tasks_free;
 
-
-
-struct task_struct* current();
-
-struct task_struct* list_head_to_task_struct(struct list_head *l);
 
 struct task_struct {
     unsigned long Pid;
@@ -59,6 +53,11 @@ extern struct protected_task_struct task[NR_TASKS];
 
 /* Inicialitza les dades del proces inicial */
 void init_task0(void);
+
+/* Task Struct Management */
+struct task_struct* current();
+struct task_struct* list_head_to_task_struct(struct list_head *l);
+struct task_struct* search_task(int pid);
 
 /* Scheduling */
 void task_switch(union task_union *t);

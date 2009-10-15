@@ -1,5 +1,4 @@
 #include <libc.h>
-#include <string.h>
 
 int __attribute__ ((__section__(".text.main")))
 main(void)
@@ -10,7 +9,11 @@ main(void)
     /* runjp(); */
     char buffer[128];
     int p1;
+    struct stats stt;
 
+    itoa(getpid(), buffer);
+    write(1, "\nMy PID is ", 11);
+    write(1, buffer, strlen(buffer));
     p1=fork();
     switch(p1) {
         case -1:
@@ -26,12 +29,30 @@ main(void)
                     write(1, "\nError", 6);
                     break;
                 case 0:
+while(1) {
                     itoa(getpid(), buffer);
                     write(1, "\nMy PID is ", 11);
                     write(1, buffer, strlen(buffer));
+                    if(get_stats(getpid(), &stt)==-1) {
+                        write(1, "\n", 1);
+                        perror();
+                    }
+                    else {
+                        itoa(stt.total_tics, buffer);
+                        write(1, "\nTotal Tics: ", 13);
+                        write(1, buffer, strlen(buffer));
+                        itoa(stt.total_trans, buffer);
+                        write(1, "\nTotal Trans: ", 14);
+                        write(1, buffer, strlen(buffer));
+                        itoa(stt.remaining_tics, buffer);
+                        write(1, "\nRemaining Tics: ", 17);
+                        write(1, buffer, strlen(buffer));                        
+                    }
                     write(1, "\n", 1);
+}
                     break;
                 default:
+while(1) {
                     itoa(p1, buffer);
                     write(1, "\nI am the parent of ", 20);
                     write(1, buffer, strlen(buffer));
@@ -39,10 +60,12 @@ main(void)
                     write(1, "\nMy old quantum is ", 19);
                     write(1, buffer, strlen(buffer));
                     write(1, "\n", 1);
+}
                 break;
             }
             break;
         default:
+while(1) {
             itoa(p1, buffer);
             write(1, "\nI am the parent of ", 20);
             write(1, buffer, strlen(buffer));
@@ -51,6 +74,7 @@ main(void)
                 perror();
             }
             write(1, "\n", 1);
+}
             break;
     }
 

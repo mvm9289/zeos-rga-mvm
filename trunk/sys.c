@@ -10,14 +10,11 @@
 #include <mm_address.h>
 #include <stats.h>
 
-#define ESCRIPTURA 1
-#define LECTURA 0
-
 #define W_SIZE 256
 
 int comprova_fd(int fd, int operacio) {
     if(fd != 1) return -EBADF;
-    if(operacio != ESCRIPTURA) return -EINVAL;
+    if(operacio != WRITE) return -EINVAL;
 
     return 0;
 }
@@ -30,10 +27,10 @@ int sys_write(int fd,char *buffer, int size)
 {
     char to_write[W_SIZE];
     int bytes=0;
-    int err = comprova_fd(fd, ESCRIPTURA);
+    int err = comprova_fd(fd, WRITE);
 
     if(err != 0) return err;
-    if(!access_ok(ESCRIPTURA, buffer, size)) return -EFAULT;
+    if(!access_ok(READ, buffer, size)) return -EFAULT;
     if(size < 0) return -EINVAL;
 
     while (size > W_SIZE) {
@@ -127,10 +124,19 @@ int sys_nice(int quantum)
 
 int sys_getstats(int pid, struct stats *st) {
     struct task_struct *tsk;
+    struct stats stt;
+
+    if(!access_ok(WRITE, st, sizeof(struct stats)))
+        return -EFAULT;
 
     tsk=search_task(pid);
+    if(!tsk) return -ESRCH;
 
-    if(tsk==-1) return -ESRCH; // Acabar
+    stt.total_tics=tsk->nbtics_cpu;
+    stt.total_trans=tsk->nbtrans;
+    stt.remaining_tics=tsk->remaining_life;
+
+    copy_to_user((void *) &stt, (void *)st, sizeof(struct stats));
 
     return 0;
 }
