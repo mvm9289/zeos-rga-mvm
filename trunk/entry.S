@@ -35,6 +35,8 @@
 /**                                              **/
 /**************************************************/
 
+#define NB_SYSCALLS 35
+
 #define SAVE_ALL \
       pushl %gs; \
       pushl %fs; \
@@ -248,11 +250,12 @@ ENTRY(sys_call_table)
 .long sys_ni_syscall
 .long sys_ni_syscall
 .long sys_ni_syscall
-.long sys_nice       // 34
+.long sys_nice
+.long sys_getstats   // 35
 
 ENTRY(syscall_handler)
 SAVE_ALL
-cmpl $34, %eax
+cmpl $NB_SYSCALLS, %eax
 jg syscall_wrong
 cmpl $0, %eax
 jge syscall_right

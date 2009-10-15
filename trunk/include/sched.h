@@ -21,6 +21,8 @@ extern unsigned long next_child_pid;
 extern unsigned long life;
 extern struct list_head runqueue;
 
+extern unsigned int tasks_free;
+
 
 
 struct task_struct* current();
@@ -33,6 +35,8 @@ struct task_struct {
 
     unsigned long quantum;
     unsigned long nbtics_cpu;
+    unsigned long nbtrans;
+    unsigned long remaining_life;
 
     unsigned long phys_frames[NUM_PAG_DATA];
 

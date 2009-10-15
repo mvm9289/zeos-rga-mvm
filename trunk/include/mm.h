@@ -13,6 +13,7 @@
 #define USED_FRAME 1
 /* Bytemap to mark the free physical pages */
 extern Byte phys_mem[TOTAL_PAGES];
+extern unsigned int phys_frames_free;
 extern page_table_entry dir_pages[TOTAL_PAGES];
 extern page_table_entry pagusr_table[TOTAL_PAGES];
 
@@ -20,7 +21,7 @@ int init_frames( void );
 int alloc_frame( void );
 void free_frame( unsigned int frame );
 int alloc_task_struct();
-void dealloc_task_frames(int tsk, unsigned long *frames, int nbframes);
+void dealloc_task_struct(int tsk);
 int initialize_P0_frames(void);
 void set_user_pages( void );
 

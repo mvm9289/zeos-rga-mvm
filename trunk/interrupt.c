@@ -230,7 +230,7 @@ void clock_routine()
 
     /* Scheduling */
     set_eoi=1;
-    current()->nbtics_cpu++; // Update Stats
+    current()->nbtics_cpu++;
     scheduler();
     set_eoi=0;
 }

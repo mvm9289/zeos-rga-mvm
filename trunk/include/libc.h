@@ -23,4 +23,6 @@ int fork(void);
 void exit(void);
 int nice (int quantum);
 
+int get_stats(int pid, struct stats *st);
+
 #endif  /* __LIBC_H__ */

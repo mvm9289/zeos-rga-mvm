@@ -35,6 +35,9 @@ main(void)
                     itoa(p1, buffer);
                     write(1, "\nI am the parent of ", 20);
                     write(1, buffer, strlen(buffer));
+                    itoa(nice(240), buffer);
+                    write(1, "\nMy old quantum is ", 19);
+                    write(1, buffer, strlen(buffer));
                     write(1, "\n", 1);
                 break;
             }
@@ -43,6 +46,10 @@ main(void)
             itoa(p1, buffer);
             write(1, "\nI am the parent of ", 20);
             write(1, buffer, strlen(buffer));
+            if(nice(-5)==-1) {
+                write(1, "\n", 1);
+                perror();
+            }
             write(1, "\n", 1);
             break;
     }
