@@ -11,6 +11,8 @@ unsigned int set_eoi=0;
 unsigned long next_child_pid=1;
 unsigned long life;
 
+unsigned int tasks_free=NR_TASKS;
+
 LIST_HEAD(runqueue);
 
 
@@ -111,10 +113,12 @@ void scheduler() { /* Round Robin */
 
 void RR_update_vars(union task_union *t) {
     life=t->task.quantum;
+    t->task.remaining_life=life;
 }
 
 unsigned int RR_need_context_switch() {
     --life;
+    current()->remaining_life--;
     if(life==0) {
         if(list_is_last(runqueue.next, &runqueue)) {
             life=current()->quantum;

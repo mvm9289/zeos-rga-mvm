@@ -9,6 +9,7 @@
 #include <sched.h>
 
 Byte phys_mem[TOTAL_PAGES];
+unsigned int phys_frames_free=TOTAL_PAGES;
 
 /* SEGMENTATION */
 /* Memory segements description table */
@@ -265,15 +266,7 @@ int alloc_task_struct() {
     return -1;
 }
 
-void dealloc_task_frames(int tsk, unsigned long *frames, int nbframes) {
-    int i;
-
-    /* Desallocate frames */
-    for(i=0; i< nbframes; i++)
-	free_frame(frames[i]);
-
-    /* Desallocate task struct */
+void dealloc_task_struct(int tsk) {
     task[tsk].t.task.allocation=FREE;
+    tasks_free++;
 }
-
-

@@ -5,10 +5,10 @@
 #include <devices.h>
 #include <utils.h>
 #include <errno.h>
-
 #include <sched.h>
 #include <mm.h>
 #include <mm_address.h>
+#include <stats.h>
 
 #define ESCRIPTURA 1
 #define LECTURA 0
@@ -64,18 +64,25 @@ int sys_fork(void)
     int fr;
 
     /* Alloc child task struct */
-    if((tsk=alloc_task_struct())==-1) return -ENOMEM;
+    if(tasks_free) {
+        tsk=alloc_task_struct();
+        tasks_free--;
+    }
+    else return -ENOMEM;
 
     /* Copy System Data: task_union */
     copy_data((void *) current(), (void *) &(task[tsk].t), KERNEL_STACK_SIZE*sizeof(unsigned long));
 
     /* Copy User Data */
+    if(phys_frames_free < NUM_PAG_DATA) {
+        dealloc_task_struct(tsk);
+        return -EAGAIN;
+    }
+    
+    phys_frames_free-=NUM_PAG_DATA;
     for(i=0; i<NUM_PAG_DATA; i++) {
         /* Frame allocation */
-        if ((fr=alloc_frame())==-1) {
-            dealloc_task_frames(tsk, task[tsk].t.task.phys_frames, i);
-            return -ENOMEM;
-        }
+        fr=alloc_frame();
 
         /* Save new frame on child task_struct */
         task[tsk].t.task.phys_frames[i]=fr;
@@ -108,11 +115,23 @@ int sys_fork(void)
 }
 
 
-int sys_nice(int quantum) 		// QUAN HI HA ERROR?
+int sys_nice(int quantum)
 {
+    int old;
 
-	int old = current()->quantum;
-	current()->quantum = quantum;
-	return old;
-
+    if(quantum <= 0) return -EPERM;
+    old = current()->quantum;
+    current()->quantum = quantum;
+    return old;
 }
+
+int sys_getstats(int pid, struct stats *st) {
+    struct task_struct *tsk;
+
+    tsk=search_task(pid);
+
+    if(tsk==-1) return -ESRCH; // Acabar
+
+    return 0;
+}
+

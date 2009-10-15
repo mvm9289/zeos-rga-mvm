@@ -4,6 +4,7 @@
 
 #include <libc.h>
 #include <string.h>
+#include <stats.h>
 
 const char *sys_errlist[] = { "Operation not permitted",
                               "No such file or directory",
@@ -224,3 +225,23 @@ void exit (void)
     );	
 
 }
+
+int get_stats(int pid, struct stats *st) {
+    int res=0;
+    __asm__ __volatile (
+        "pushl %%ebx\n"
+        "movl 8(%%ebp), %%ebx\n"
+        "movl 12(%%ebp), %%ecx\n"
+        "movl $35, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
