@@ -10,24 +10,10 @@
 unsigned int set_eoi=0;
 unsigned long next_child_pid=1;
 unsigned long life;
-
 unsigned int tasks_free=NR_TASKS;
 
 LIST_HEAD(runqueue);
 
-
-
-struct task_struct* current()
-{
-	unsigned int esp;
-	__asm__ __volatile__ (" movl %%esp, %0" :"=g" (esp));
-	return (struct task_struct *)(esp&0xFFFFF000);
-}
-
-struct task_struct* list_head_to_task_struct(struct list_head *l)
-{
-	return list_entry(l, struct task_struct, rq_list);
-}
 
 struct protected_task_struct task[NR_TASKS]
             __attribute__((__section__(".data.task")));
@@ -57,6 +43,29 @@ void init_task0(void)
 
     /* Insert task0 in runqueue */
     list_add(&(task[0].t.task.rq_list), &runqueue);
+}
+
+struct task_struct* current()
+{
+	unsigned int esp;
+	__asm__ __volatile__ (" movl %%esp, %0" :"=g" (esp));
+	return (struct task_struct *)(esp&0xFFFFF000);
+}
+
+struct task_struct* list_head_to_task_struct(struct list_head *l)
+{
+	return list_entry(l, struct task_struct, rq_list);
+}
+
+struct task_struct* search_task(int pid) {
+    int i;
+
+    for(i=0; i<NR_TASKS; i++) {
+        if(task[i].t.task.Pid==pid)
+            return &(task[i].t.task);
+    }
+
+    return NULL;
 }
 
 void task_switch(union task_union *t) {
@@ -113,12 +122,15 @@ void scheduler() { /* Round Robin */
 
 void RR_update_vars(union task_union *t) {
     life=t->task.quantum;
+    t->task.nbtrans++;
     t->task.remaining_life=life;
 }
 
 unsigned int RR_need_context_switch() {
     --life;
+    current()->nbtics_cpu++;
     current()->remaining_life--;
+    
     if(life==0) {
         if(list_is_last(runqueue.next, &runqueue)) {
             life=current()->quantum;
