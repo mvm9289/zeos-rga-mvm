@@ -164,3 +164,63 @@ int write(int fd,char *buffer,int size)
     return res;
 }
 
+int getpid (void)
+{
+
+    int res=0;
+    __asm__ __volatile (
+        "movl $20, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0" : "=g" (res)
+    );
+	
+    return res;
+
+}
+
+int fork(void)
+{
+    int res=0;
+    __asm__ __volatile__ (
+        "movl $2, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n" : "=g" (res)
+    );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+int nice (int quantum)
+{
+
+    int res=0;
+    __asm__ __volatile__ (
+        "pushl %%ebx\n"
+        "movl 8(%%ebp), %%ebx\n"
+        "movl $34, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        "popl %%ebx" : "=g" (res)
+    );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+void exit (void)    
+{
+    __asm__ __volatile__ (
+        "movl  $1, %eax\n"
+        "int $0x80"  // algo mas??
+    );	
+
+}

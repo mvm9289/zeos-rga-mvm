@@ -214,16 +214,45 @@ iret
 
 
 ENTRY(sys_call_table)
-.long sys_ni_syscall
-.long sys_ni_syscall
-.long sys_ni_syscall
+.long sys_ni_syscall // 0
+.long sys_exit
+.long sys_fork
 .long sys_ni_syscall
 .long sys_write
-
+.long sys_ni_syscall // 5
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall // 10
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall // 15
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_getpid     // 20
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall // 25
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall // 30
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_nice       // 34
 
 ENTRY(syscall_handler)
 SAVE_ALL
-cmpl $4, %eax
+cmpl $34, %eax
 jg syscall_wrong
 cmpl $0, %eax
 jge syscall_right

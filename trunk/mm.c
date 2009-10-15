@@ -134,6 +134,12 @@ void set_ss_pag(unsigned page,unsigned frame)
     pagusr_table[page].bits.present=1;
 
 }
+
+void del_ss_pag(unsigned pagina_logica)
+{
+	pagusr_table[pagina_logica].entry = 0;
+}
+
 /* Initializes paging for the system address space */
 void init_mm()
 {
@@ -242,7 +248,32 @@ int alloc_frame( void )
 /* free_frame - Mark as FREE_FRAME the frame  'frame'.*/
 void free_frame( unsigned int frame )
 {
-    /* You must insert code here */
+
+    phys_mem[frame] = FREE_FRAME;  // marquem el frame 'frame' com a frame lliure
+    
+}
+
+int alloc_task_struct() {
+    int tsk;
+    /* Search allocation for task struct */
+    for(tsk=1; tsk<NR_TASKS; tsk++)
+        if(task[tsk].t.task.allocation==FREE) {
+            task[tsk].t.task.allocation=ALLOC;
+            return tsk;
+        }
+
+    return -1;
+}
+
+void dealloc_task_frames(int tsk, unsigned long *frames, int nbframes) {
+    int i;
+
+    /* Desallocate frames */
+    for(i=0; i< nbframes; i++)
+	free_frame(frames[i]);
+
+    /* Desallocate task struct */
+    task[tsk].t.task.allocation=FREE;
 }
 
 
