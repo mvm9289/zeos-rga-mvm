@@ -6,8 +6,12 @@
 #include <utils.h>
 #include <errno.h>
 
-#define ESCRIPTURA 0
-#define LECTURA 1
+#include <sched.h>
+#include <mm.h>
+#include <mm_address.h>
+
+#define ESCRIPTURA 1
+#define LECTURA 0
 
 #define W_SIZE 256
 
@@ -29,7 +33,7 @@ int sys_write(int fd,char *buffer, int size)
     int err = comprova_fd(fd, ESCRIPTURA);
 
     if(err != 0) return err;
-    if(!buffer) return -EFAULT;
+    if(!access_ok(ESCRIPTURA, buffer, size)) return -EFAULT;
     if(size < 0) return -EINVAL;
 
     while (size > W_SIZE) {
@@ -43,3 +47,72 @@ int sys_write(int fd,char *buffer, int size)
     return bytes;
 }
 
+int sys_getpid(void)
+{
+    return current()->Pid;
+}
+
+
+void sys_exit(void)
+{
+}
+
+int sys_fork(void)
+{
+    int tsk;
+    int i;
+    int fr;
+
+    /* Alloc child task struct */
+    if((tsk=alloc_task_struct())==-1) return -ENOMEM;
+
+    /* Copy System Data: task_union */
+    copy_data((void *) current(), (void *) &(task[tsk].t), KERNEL_STACK_SIZE*sizeof(unsigned long));
+
+    /* Copy User Data */
+    for(i=0; i<NUM_PAG_DATA; i++) {
+        /* Frame allocation */
+        if ((fr=alloc_frame())==-1) {
+            dealloc_task_frames(tsk, task[tsk].t.task.phys_frames, i);
+            return -ENOMEM;
+        }
+
+        /* Save new frame on child task_struct */
+        task[tsk].t.task.phys_frames[i]=fr;
+
+        /* Copy Data Page */
+        set_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA, fr); // Set AUX page
+        set_cr3(); // Flush TLB
+        copy_data((void *) ((PAG_LOG_INIT_DATA_P0+i)<<12), (void *) ((PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA)<<12), PAGE_SIZE);
+    }
+    del_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA); // Delete AUX page
+    set_cr3(); // Flush TLB
+
+    /* Initialize child task_struct */
+
+    /* New PID for child process */
+    task[tsk].t.task.Pid=next_child_pid;
+    /* Child PPid */
+    task[tsk].t.task.PPid=current()->Pid;
+    /* Child Quantum */
+    task[tsk].t.task.quantum=STD_QUANTUM;
+    /* Child Nb Tics Cpu */
+    task[tsk].t.task.nbtics_cpu=0;
+    /* Child return value */
+    task[tsk].t.stack[KERNEL_STACK_SIZE-10]=0;
+
+    /* Insert child in RUNQUEUE */
+    list_add_tail(&task[tsk].t.task.rq_list, &runqueue);
+
+    return next_child_pid++;
+}
+
+
+int sys_nice(int quantum) 		// QUAN HI HA ERROR?
+{
+
+	int old = current()->quantum;
+	current()->quantum = quantum;
+	return old;
+
+}

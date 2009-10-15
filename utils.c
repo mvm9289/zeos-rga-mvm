@@ -1,5 +1,10 @@
 #include <utils.h>
 #include <types.h>
+#include <mm_address.h>
+
+#define READ 0
+#define WRITE 1
+
 void copy_data(void *start, void *dest, int size)
 {
     DWord *p = start, *q = dest;
@@ -61,6 +66,12 @@ int copy_to_user(void *start, void *dest, int size)
  */
 int access_ok(int type, const void * addr, unsigned long size)
 {
-    return 0;
+    unsigned long pag_start = NUM_PAGE_ADDR((unsigned long)addr);
+    unsigned long pag_end = NUM_PAGE_ADDR(((unsigned long)addr+size));
+
+    if(pag_start < NUM_PAG_KERNEL) return 0;
+    else if(pag_end >= NUM_PAG_KERNEL+NUM_PAG_CODE+NUM_PAG_DATA) return 0;
+    else if(pag_start < (NUM_PAG_KERNEL+NUM_PAG_CODE) && type==WRITE) return 0; 
+    else return 1;
 }
 

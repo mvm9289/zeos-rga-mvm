@@ -8,6 +8,7 @@
 #include <entry.h>
 #include <io.h>
 #include <string.h>
+#include <sched.h>
 
 #define KERNEL_LEVEL 0
 #define USER_LEVEL 3
@@ -210,6 +211,7 @@ void clock_routine()
     char sec_buff[3];
     int aux;
 
+    /* Elapsed Time */
     ++ticks;
     if(ticks == 485)  // 485 =~ 1 sec
     {
@@ -226,13 +228,20 @@ void clock_routine()
         printk_xy(X_CLOCK - aux+5, Y_CLOCK, sec_buff);
     }
 
+    /* Scheduling */
+    set_eoi=1;
+    current()->nbtics_cpu++; // Update Stats
+    scheduler();
+    set_eoi=0;
 }
 
 void keyboard_routine() {
     char key=inb(0x60);
     int cr;
     char ch;
-
+char buff[128];
+itoa(current()->Pid, buff); //-------------------------->PARA PRUEBAS!!!!
+printk(buff);
     if(!(key & 0x80)) {
         cr = (key & 0x7F);
         ch = char_map[cr];

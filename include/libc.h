@@ -15,7 +15,12 @@ void perror(); /* print errno error message */
 
 
 
-/* Wrapper of  write system call*/
+/* Wrapper of system calls*/
 int write(int fd,char *buffer,int size);
+
+int getpid(void);
+int fork(void);
+void exit(void);
+int nice (int quantum);
 
 #endif  /* __LIBC_H__ */
