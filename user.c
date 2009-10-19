@@ -29,7 +29,6 @@ main(void)
                     write(1, "\nError", 6);
                     break;
                 case 0:
-while(1) {
                     itoa(getpid(), buffer);
                     write(1, "\nMy PID is ", 11);
                     write(1, buffer, strlen(buffer));
@@ -49,10 +48,8 @@ while(1) {
                         write(1, buffer, strlen(buffer));                        
                     }
                     write(1, "\n", 1);
-}
                     break;
                 default:
-while(1) {
                     itoa(p1, buffer);
                     write(1, "\nI am the parent of ", 20);
                     write(1, buffer, strlen(buffer));
@@ -60,12 +57,11 @@ while(1) {
                     write(1, "\nMy old quantum is ", 19);
                     write(1, buffer, strlen(buffer));
                     write(1, "\n", 1);
-}
+                    exit();
                 break;
             }
             break;
         default:
-while(1) {
             itoa(p1, buffer);
             write(1, "\nI am the parent of ", 20);
             write(1, buffer, strlen(buffer));
@@ -74,7 +70,6 @@ while(1) {
                 perror();
             }
             write(1, "\n", 1);
-}
             break;
     }
 

@@ -61,7 +61,7 @@ struct task_struct* search_task(int pid) {
     int i;
 
     for(i=0; i<NR_TASKS; i++) {
-        if(task[i].t.task.Pid==pid)
+        if(task[i].t.task.allocation==ALLOC && task[i].t.task.Pid==pid)
             return &(task[i].t.task);
     }
 
