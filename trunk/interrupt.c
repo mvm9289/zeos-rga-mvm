@@ -191,7 +191,16 @@ void general_protection_routine() {
 }
 
 void page_fault_routine() {
+    /* Exception info */
+    char buffer[6];
+    printk("\nProcess:");
+    itoa(current()->Pid, buffer);
+    printk(buffer);
     printk("\nPage Fault Exception\n");
+
+    /* Process Exit */
+    sys_exit();
+    
     while(1);
 }
 

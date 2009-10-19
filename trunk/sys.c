@@ -50,10 +50,6 @@ int sys_getpid(void)
 }
 
 
-void sys_exit(void)
-{
-}
-
 int sys_fork(void)
 {
     int tsk;
@@ -139,5 +135,29 @@ int sys_getstats(int pid, struct stats *st) {
     copy_to_user((void *) &stt, (void *)st, sizeof(struct stats));
 
     return 0;
+}
+
+void sys_exit(void)
+{
+    int i;
+    union task_union *new_entry;
+
+    if(current()->Pid==0) return;
+
+    /* Free Phys Frames of Current Process */
+    for(i=0; i < NUM_PAG_DATA; ++i) {
+        free_frame(current()->phys_frames[i]);
+        phys_frames_free++;
+    }
+
+    /* Free task_struct of Current Process */
+    current()->allocation = FREE;
+    tasks_free++;
+    
+    /* Select next process to entry on CPU */
+    list_del(&(current()->rq_list));
+    new_entry = RR_next_process();
+    RR_update_vars(new_entry);
+    task_switch(new_entry);
 }
 
