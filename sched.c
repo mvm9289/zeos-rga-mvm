@@ -18,26 +18,52 @@ LIST_HEAD(runqueue);
 struct protected_task_struct task[NR_TASKS]
             __attribute__((__section__(".data.task")));
 
-void init_task0(void)
-{
-    /* Set all task structs FREE */
+struct semaphore sems[NR_SEM];
+
+void init_tasks() {
     int i;
+
     for(i=0; i<NR_TASKS; i++)
         task[i].t.task.allocation=FREE;
 
-    /* Initializes paging for the process 0 adress space */
+}
+
+void init_sems() {
+    int i;
+
+    for(i=0; i<NR_SEM; i++) {
+        sems[i].allocation=FREE;
+        INIT_LIST_HEAD(&sems[i].blockqueue);
+    }
+}
+
+void init_task0(void)
+{
+    int i;
+
+    /* System Initialization */
+    init_tasks();
+    init_sems();
+    
+    /* Initializes paging for task0 adress space */
     initialize_P0_frames();
     set_user_pages();
     set_cr3();
+
+    /* Initializes task0 task_struct */
 
     task[0].t.task.PPid=0;
     task[0].t.task.Pid=0;
     task[0].t.task.quantum=STD_QUANTUM;
     life=STD_QUANTUM;
     task[0].t.task.nbtics_cpu=0;
-
+    /* Initializes phys frames for task 0 */
     for(i=0; i<NUM_PAG_DATA; i++)
         task[0].t.task.phys_frames[i]=pagusr_table[PAG_LOG_INIT_DATA_P0+i].bits.pbase_addr;
+    /* Initializes task0 sems_owner */
+    for(i=0; i<NR_SEM; i++)
+        task[0].t.task.sems_owner[i]=0;
+    
 
     task[0].t.task.allocation=ALLOC;
 
@@ -134,6 +160,7 @@ unsigned int RR_need_context_switch() {
     if(life==0) {
         if(list_is_last(runqueue.next, &runqueue)) {
             life=current()->quantum;
+            current()->remaining_life=life;
             return 0;
         }
         return 1;

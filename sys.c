@@ -66,7 +66,7 @@ int sys_fork(void)
     /* Copy System Data: task_union */
     copy_data((void *) current(), (void *) &(task[tsk].t), KERNEL_STACK_SIZE*sizeof(unsigned long));
 
-    /* Copy User Data */
+    /* Copy User Data *///REMIRAR SI PARA HACER LA COMPROVACION ANTES
     if(phys_frames_free < NUM_PAG_DATA) {
         dealloc_task_struct(tsk);
         return -EAGAIN;
@@ -96,8 +96,13 @@ int sys_fork(void)
     task[tsk].t.task.PPid=current()->Pid;
     /* Child Quantum */
     task[tsk].t.task.quantum=STD_QUANTUM;
+    /* Child Nb Trans */
+    task[tsk].t.task.nbtrans=0;
     /* Child Nb Tics Cpu */
     task[tsk].t.task.nbtics_cpu=0;
+    /* Child sems_owner */
+    for(i=0; i<NR_SEM; i++)
+        task[tsk].t.task.sems_owner[i]=0;
     /* Child return value */
     task[tsk].t.stack[KERNEL_STACK_SIZE-10]=0;
 
@@ -137,7 +142,7 @@ int sys_getstats(int pid, struct stats *st) {
     return 0;
 }
 
-void sys_exit(void)
+void sys_exit(void)//MODIFICAR PARA LOS SEMS
 {
     int i;
     union task_union *new_entry;
@@ -161,3 +166,18 @@ void sys_exit(void)
     task_switch(new_entry);
 }
 
+int sys_sem_init(int n_sem, unsigned int value) {
+    return 0;
+}
+
+int sys_sem_wait(int n_sem) {
+    return 0;
+}
+
+int sys_sem_signal(int n_sem) {
+    return 0;
+}
+
+int sys_sem_destroy(int n_sem) {
+    return 0;
+}

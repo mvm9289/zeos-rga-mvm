@@ -16,6 +16,9 @@
 
 #define STD_QUANTUM 55
 
+
+#define NR_SEM 10
+
 extern unsigned int set_eoi;
 extern unsigned long next_child_pid;
 extern unsigned long life;
@@ -34,6 +37,8 @@ struct task_struct {
 
     unsigned long phys_frames[NUM_PAG_DATA];
 
+    unsigned long sems_owner[NR_SEM];
+
     struct list_head rq_list;
 
     unsigned long allocation;
@@ -50,6 +55,24 @@ struct protected_task_struct {
 };
 
 extern struct protected_task_struct task[NR_TASKS];
+
+
+struct semaphore {
+    int count;
+
+    struct list_head blockqueue;
+
+    unsigned int allocation;
+};
+
+extern struct semaphore sems[NR_SEM];
+
+/* System Initialization */
+
+/* Tasks Structs Initialization */
+void init_tasks();
+/* Sems Initialization */
+void init_sems();
 
 /* Inicialitza les dades del proces inicial */
 void init_task0(void);
