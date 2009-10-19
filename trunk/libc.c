@@ -176,7 +176,6 @@ int getpid (void)
     );
 	
     return res;
-
 }
 
 int fork(void)
@@ -221,9 +220,8 @@ void exit (void)
 {
     __asm__ __volatile__ (
         "movl  $1, %eax\n"
-        "int $0x80"  // algo mas??
+        "int $0x80"
     );	
-
 }
 
 int get_stats(int pid, struct stats *st) {
@@ -245,3 +243,75 @@ int get_stats(int pid, struct stats *st) {
     return res;
 }
 
+int sem_init(int n_sem, unsigned int value) {
+    int res=0;
+    __asm__ __volatile (
+        "pushl %%ebx\n"
+        "movl 8(%%ebp), %%ebx\n"
+        "movl 12(%%ebp), %%ecx\n"
+        "movl $21, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+int sem_wait(int n_sem) {
+    int res=0;
+    __asm__ __volatile (
+        "pushl %%ebx\n"
+        "movl 8(%%ebp), %%ebx\n"
+        "movl $22, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+int sem_signal(int n_sem) {
+    int res=0;
+    __asm__ __volatile (
+        "pushl %%ebx\n"
+        "movl 8(%%ebp), %%ebx\n"
+        "movl $23, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+int sem_destroy(int n_sem) {
+    int res=0;
+    __asm__ __volatile (
+        "pushl %%ebx\n"
+        "movl 8(%%ebp), %%ebx\n"
+        "movl $24, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}

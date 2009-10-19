@@ -199,7 +199,7 @@ void page_fault_routine() {
     printk("\nPage Fault Exception\n");
 
     /* Process Exit */
-    sys_exit();
+    sys_exit();//SE PUEDE???
     
     while(1);
 }
