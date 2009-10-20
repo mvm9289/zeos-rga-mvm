@@ -83,6 +83,7 @@ struct task_struct* list_head_to_task_struct(struct list_head *l)
 	return list_entry(l, struct task_struct, rq_list);
 }
 
+
 struct task_struct* search_task(int pid) {
     int i;
 
@@ -93,6 +94,20 @@ struct task_struct* search_task(int pid) {
 
     return NULL;
 }
+
+/* ASPECTO DE LA NUEVA SEARCH_TASK */
+/*
+union task_union* search_task2(int pid) {
+    int i;
+
+    for(i=0; i<NR_TASKS; i++) {
+        if(task[i].t.task.allocation==ALLOC && task[i].t.task.Pid==pid)
+            return &(task[i].t);
+    }
+
+    return NULL;
+}
+*/
 
 void task_switch(union task_union *t) {
     int i;

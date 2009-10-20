@@ -60,6 +60,8 @@ extern struct protected_task_struct task[NR_TASKS];
 struct semaphore {
     int count;
 
+    //int ownerPid; CREO QUE NECESARIO
+
     struct list_head blockqueue;
 
     unsigned int allocation;

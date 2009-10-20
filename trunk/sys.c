@@ -155,6 +155,10 @@ void sys_exit(void)//MODIFICAR PARA LOS SEMS
         phys_frames_free++;
     }
 
+
+    /* NOS FALTA ELIMINAR SEMAFOROS I DESBLOQUEAR LOS PROCESOS EN CASO QUE LOS HAYA */
+    
+
     /* Free task_struct of Current Process */
     current()->allocation = FREE;
     tasks_free++;
@@ -167,12 +171,58 @@ void sys_exit(void)//MODIFICAR PARA LOS SEMS
 }
 
 int sys_sem_init(int n_sem, unsigned int value) {
-    return 0;
+
+    if(n_sem >= 0 && n_sem < NR_SEM)
+    {
+        if(sems[n_sem].allocation == FREE)
+        {
+            sems[n_sem].allocation = ALLOC;
+            sems[n_sem].count = value;
+            return 0;
+        }
+    }
+
+    return -1;
 }
 
 int sys_sem_wait(int n_sem) {
+
+    union task_union *new_entry; //only if task switch is needed
+    union task_union *currUnion;
+
+    if(current()->Pid == 0) return -1; // task0 mai pot ser blockejat
+
+    if(n_sem >= 0 && n_sem < NR_SEM)
+    {
+        if(sems[n_sem].allocation == ALLOC)
+        {
+            if(sems[n_sem].count > 0)
+            {
+                sems[n_sem].count++;
+                return 0;
+            }
+            /* Add the current process to the blockqueue */
+            list_add_tail(&(current()->rq_list), &sems[n_sem].blockqueue); 
+            /* Context switch */
+            list_del(&(current()->rq_list));
+            new_entry = RR_next_process();
+            RR_update_vars(new_entry);
+
+            /* Poner manualmente en el %eax del proceso current. Para ello necesitamos saber la direccion de la union para visitar la kernel stack. Yo he pensado en cambiar la search_task para que devuelva una union en vez de una task_struct. En este caso iremos hacia la stack y en los demás iremos hacia la task_struct. Mejor eso que repetir otra que haga exactamente lo mismo pero que devuelva la task_union */
+
+            currUnion = search_task2(current()->Pid); // está comentada debajo de la normal
+            /* LA HE PUESTO PARA PROBAR QUE COMPILARA YA LO CAMBIAREMOS */
+
+            currUnion->stack[KERNEL_STACK_SIZE-10]=0; //return 0
+
+            task_switch(new_entry);
+
+        }else return -1;
+    }else return -1;
+
     return 0;
 }
+
 
 int sys_sem_signal(int n_sem) {
     return 0;
