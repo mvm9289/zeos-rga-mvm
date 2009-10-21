@@ -101,6 +101,8 @@ int sys_fork(void)
     task[tsk].t.task.nbtrans=0;
     /* Child Nb Tics Cpu */
     task[tsk].t.task.nbtics_cpu=0;
+    /* Child Remaining Tics */
+    task[tsk].t.task.remaining_life=task[tsk].t.task.quantum;
     /* Child sems_owner */
     for(i=0; i<NR_SEM; i++)
         task[tsk].t.task.sems_owner[i]=0;
@@ -179,8 +181,8 @@ int sys_sem_signal(int n_sem) {
 int sys_sem_destroy(int n_sem) {
     union task_union *t;
 
-    if(sems[n_sem].allocation==FREE) return -EINVAL;
     if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
+    if(sems[n_sem].allocation==FREE) return -EINVAL;
     if(current()->sems_owner[n_sem]==0) return -EPERM;
 
     while(sems[n_sem].count < 0) {
