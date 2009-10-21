@@ -266,7 +266,7 @@ int alloc_task_struct() {
     return -1;
 }
 
-void dealloc_task_struct(int tsk) {
+/*void dealloc_task_struct(int tsk) {
     task[tsk].t.task.allocation=FREE;
     tasks_free++;
-}
+}*/
