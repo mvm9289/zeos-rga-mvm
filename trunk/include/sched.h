@@ -14,7 +14,7 @@
 #define FREE 0
 #define ALLOC 1
 
-#define STD_QUANTUM 55
+#define STD_QUANTUM 400
 
 
 #define NR_SEM 10
@@ -60,8 +60,6 @@ extern struct protected_task_struct task[NR_TASKS];
 struct semaphore {
     int count;
 
-    //int ownerPid; CREO QUE NECESARIO
-
     struct list_head blockqueue;
 
     unsigned int allocation;
@@ -73,8 +71,6 @@ extern struct semaphore sems[NR_SEM];
 
 /* Tasks Structs Initialization */
 void init_tasks();
-/* Sems Initialization */
-void init_sems();
 
 /* Inicialitza les dades del proces inicial */
 void init_task0(void);

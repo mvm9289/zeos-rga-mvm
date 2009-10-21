@@ -56,6 +56,7 @@ int sys_fork(void)
     int i;
     int fr;
 
+    if(phys_frames_free < NUM_PAG_DATA) return -EAGAIN; //PONER BIEN
     /* Alloc child task struct */
     if(tasks_free) {
         tsk=alloc_task_struct();
@@ -67,10 +68,10 @@ int sys_fork(void)
     copy_data((void *) current(), (void *) &(task[tsk].t), KERNEL_STACK_SIZE*sizeof(unsigned long));
 
     /* Copy User Data *///REMIRAR SI PARA HACER LA COMPROVACION ANTES
-    if(phys_frames_free < NUM_PAG_DATA) {
+    /*if(phys_frames_free < NUM_PAG_DATA) {
         dealloc_task_struct(tsk);
         return -EAGAIN;
-    }
+    }*/
     
     phys_frames_free-=NUM_PAG_DATA;
     for(i=0; i<NUM_PAG_DATA; i++) {
@@ -95,7 +96,7 @@ int sys_fork(void)
     /* Child PPid */
     task[tsk].t.task.PPid=current()->Pid;
     /* Child Quantum */
-    task[tsk].t.task.quantum=STD_QUANTUM;
+    task[tsk].t.task.quantum=current()->quantum; //HACE FALTA? YA LO COPIAS CON COPY DATA
     /* Child Nb Trans */
     task[tsk].t.task.nbtrans=0;
     /* Child Nb Tics Cpu */
@@ -117,47 +118,104 @@ int sys_nice(int quantum)
 {
     int old;
 
-    if(quantum <= 0) return -EPERM;
+    if(quantum <= 0) return -EINVAL;
     old = current()->quantum;
     current()->quantum = quantum;
     return old;
 }
 
-int sys_getstats(int pid, struct stats *st) {
-    struct task_struct *tsk;
-    struct stats stt;
+int sys_sem_init(int n_sem, unsigned int value) {
+    if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
+    if(sems[n_sem].allocation==ALLOC) return -EBUSY;
 
-    if(!access_ok(WRITE, st, sizeof(struct stats)))
-        return -EFAULT;
+    sems[n_sem].allocation=ALLOC;
+    sems[n_sem].count=value;
+    INIT_LIST_HEAD(&sems[n_sem].blockqueue);
 
-    tsk=search_task(pid);
-    if(!tsk) return -ESRCH;
-
-    stt.total_tics=tsk->nbtics_cpu;
-    stt.total_trans=tsk->nbtrans;
-    stt.remaining_tics=tsk->remaining_life;
-
-    copy_to_user((void *) &stt, (void *)st, sizeof(struct stats));
+    current()->sems_owner[n_sem]=1;
 
     return 0;
 }
 
-void sys_exit(void)//MODIFICAR PARA LOS SEMS
-{
+int sys_sem_wait(int n_sem) {
+    union task_union *new_entry;
+
+    if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
+    if(sems[n_sem].allocation==FREE) return -EINVAL;
+
+    if(sems[n_sem].count <= 0) {
+        if(current()->Pid==0) return -EPERM;
+
+        list_del(&(current()->rq_list));
+        list_add_tail(&(current()->rq_list), &sems[n_sem].blockqueue);
+        sems[n_sem].count--;
+        new_entry=RR_next_process();// ESTO ESTA EN VARIOS SITIOS, ENCAPSULAR??
+        RR_update_vars(new_entry);
+        task_switch(new_entry);
+    }
+    else sems[n_sem].count--;
+
+    return 0;
+}
+
+int sys_sem_signal(int n_sem) {
+    union task_union *t;
+
+    if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
+    if(sems[n_sem].allocation==FREE) return -EINVAL;
+
+    sems[n_sem].count++;
+    if(sems[n_sem].count <= 0) {
+        t=(union task_union *) list_head_to_task_struct(sems[n_sem].blockqueue.next);
+        t->stack[KERNEL_STACK_SIZE-10]=0;
+
+        list_del(sems[n_sem].blockqueue.next);
+        list_add_tail(&(t->task.rq_list), &runqueue);
+    }
+
+    return 0;
+}
+
+int sys_sem_destroy(int n_sem) {
+    union task_union *t;
+
+    if(sems[n_sem].allocation==FREE) return -EINVAL;
+    if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
+    if(current()->sems_owner[n_sem]==0) return -EPERM;
+
+    while(sems[n_sem].count < 0) {
+        t=(union task_union *) list_head_to_task_struct(sems[n_sem].blockqueue.next);
+        t->stack[KERNEL_STACK_SIZE-10]=-1;
+
+        list_del(sems[n_sem].blockqueue.next);
+        list_add_tail(&(t->task.rq_list), &runqueue);
+        
+        sems[n_sem].count++;
+    }
+
+    sems[n_sem].allocation=FREE;
+    current()->sems_owner[n_sem]=0;
+
+    return 0;
+}
+
+void sys_exit(void) {
     int i;
     union task_union *new_entry;
 
     if(current()->Pid==0) return;
+
+    /* Destroy Own Sems */
+    for(i=0; i<NR_SEM; i++) {
+        if(current()->sems_owner[i])
+            sys_sem_destroy(i);//ESTO SE PUEDE??
+    }
 
     /* Free Phys Frames of Current Process */
     for(i=0; i < NUM_PAG_DATA; ++i) {
         free_frame(current()->phys_frames[i]);
         phys_frames_free++;
     }
-
-
-    /* NOS FALTA ELIMINAR SEMAFOROS I DESBLOQUEAR LOS PROCESOS EN CASO QUE LOS HAYA */
-    
 
     /* Free task_struct of Current Process */
     current()->allocation = FREE;
@@ -170,64 +228,22 @@ void sys_exit(void)//MODIFICAR PARA LOS SEMS
     task_switch(new_entry);
 }
 
-int sys_sem_init(int n_sem, unsigned int value) {
+int sys_getstats(int pid, struct stats *st) {
+    struct task_struct *tsk;
+    struct stats stt;
 
-    if(n_sem >= 0 && n_sem < NR_SEM)
-    {
-        if(sems[n_sem].allocation == FREE)
-        {
-            sems[n_sem].allocation = ALLOC;
-            sems[n_sem].count = value;
-            return 0;
-        }
-    }
+    if(pid < 0) return -EINVAL;
+    if(!access_ok(WRITE, st, sizeof(struct stats)))
+        return -EFAULT;
 
-    return -1;
-}
+    tsk=search_task(pid);
+    if(!tsk) return -ESRCH;
 
-int sys_sem_wait(int n_sem) {
+    stt.total_tics=tsk->nbtics_cpu;
+    stt.total_trans=tsk->nbtrans;
+    stt.remaining_tics=tsk->remaining_life;
 
-    union task_union *new_entry; //only if task switch is needed
-    union task_union *currUnion;
+    copy_to_user((void *) &stt, (void *)st, sizeof(struct stats));
 
-    if(current()->Pid == 0) return -1; // task0 mai pot ser blockejat
-
-    if(n_sem >= 0 && n_sem < NR_SEM)
-    {
-        if(sems[n_sem].allocation == ALLOC)
-        {
-            if(sems[n_sem].count > 0)
-            {
-                sems[n_sem].count++;
-                return 0;
-            }
-            /* Add the current process to the blockqueue */
-            list_add_tail(&(current()->rq_list), &sems[n_sem].blockqueue); 
-            /* Context switch */
-            list_del(&(current()->rq_list));
-            new_entry = RR_next_process();
-            RR_update_vars(new_entry);
-
-            /* Poner manualmente en el %eax del proceso current. Para ello necesitamos saber la direccion de la union para visitar la kernel stack. Yo he pensado en cambiar la search_task para que devuelva una union en vez de una task_struct. En este caso iremos hacia la stack y en los demás iremos hacia la task_struct. Mejor eso que repetir otra que haga exactamente lo mismo pero que devuelva la task_union */
-
-            currUnion = search_task2(current()->Pid); // está comentada debajo de la normal
-            /* LA HE PUESTO PARA PROBAR QUE COMPILARA YA LO CAMBIAREMOS */
-
-            currUnion->stack[KERNEL_STACK_SIZE-10]=0; //return 0
-
-            task_switch(new_entry);
-
-        }else return -1;
-    }else return -1;
-
-    return 0;
-}
-
-
-int sys_sem_signal(int n_sem) {
-    return 0;
-}
-
-int sys_sem_destroy(int n_sem) {
     return 0;
 }

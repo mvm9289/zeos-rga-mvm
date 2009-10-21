@@ -1,1 +1,2 @@
 Se puede poner un sys_exit dentro del Page Fault?
+Se puede poner un sys_sem_destroy en el sys_exit?

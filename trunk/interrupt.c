@@ -221,7 +221,7 @@ void clock_routine()
     int aux;
 
     /* Elapsed Time */
-    ++ticks;
+    /*++ticks;
     if(ticks == 485)  // 485 =~ 1 sec
     {
         ticks = 0;
@@ -235,7 +235,7 @@ void clock_routine()
         printc_xy(X_CLOCK+2, Y_CLOCK, ':');
         if((aux = strlen(sec_buff)) == 1) printc_xy(X_CLOCK+3, Y_CLOCK, '0');
         printk_xy(X_CLOCK - aux+5, Y_CLOCK, sec_buff);
-    }
+    }*/
 
     /* Scheduling */
     set_eoi=1;
