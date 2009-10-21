@@ -63,6 +63,7 @@ void init_task0(void)
     
 
     task[0].t.task.allocation=ALLOC;
+    tasks_free--;
 
     /* Insert task0 in runqueue */
     list_add(&(task[0].t.task.rq_list), &runqueue);
@@ -152,7 +153,7 @@ void RR_update_vars(union task_union *t) {
 unsigned int RR_need_context_switch() {
     --life;
     current()->nbtics_cpu++;
-    current()->remaining_life--;
+    current()->remaining_life=life;
     
     if(life==0) {
         if(list_is_last(runqueue.next, &runqueue)) {
