@@ -11,7 +11,7 @@
 
 /* ERRNO */
 #include <errno.h>
-int errno;
+extern int errno;
 void perror(); /* print errno error message */
 
 

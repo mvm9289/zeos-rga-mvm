@@ -140,7 +140,7 @@ int sys_sem_init(int n_sem, unsigned int value) {
 }
 
 int sys_sem_wait(int n_sem) {
-    union task_union *new_entry;
+    union task_union *t;
 
     if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
     if(sems[n_sem].allocation==FREE) return -EINVAL;
@@ -151,9 +151,10 @@ int sys_sem_wait(int n_sem) {
         list_del(&(current()->rq_list));
         list_add_tail(&(current()->rq_list), &sems[n_sem].blockqueue);
         sems[n_sem].count--;
-        new_entry=RR_next_process();// ESTO ESTA EN VARIOS SITIOS, ENCAPSULAR??
-        RR_update_vars(new_entry);
-        task_switch(new_entry);
+        t=(union task_union *) list_head_to_task_struct(runqueue.next);
+        life=t->task.quantum;
+        t->task.nbtrans++;
+        task_switch(t);
     }
     else sems[n_sem].count--;
 
@@ -181,9 +182,9 @@ int sys_sem_signal(int n_sem) {
 int sys_sem_destroy(int n_sem) {
     union task_union *t;
 
+    if(current()->sems_owner[n_sem]==0) return -EPERM;
     if(n_sem < 0 || n_sem >= NR_SEM) return -EINVAL;
     if(sems[n_sem].allocation==FREE) return -EINVAL;
-    if(current()->sems_owner[n_sem]==0) return -EPERM;
 
     while(sems[n_sem].count < 0) {
         t=(union task_union *) list_head_to_task_struct(sems[n_sem].blockqueue.next);
@@ -203,14 +204,14 @@ int sys_sem_destroy(int n_sem) {
 
 void sys_exit(void) {
     int i;
-    union task_union *new_entry;
+    union task_union *t;
 
     if(current()->Pid==0) return;
 
     /* Destroy Own Sems */
     for(i=0; i<NR_SEM; i++) {
         if(current()->sems_owner[i])
-            sys_sem_destroy(i);//ESTO SE PUEDE??
+            sys_sem_destroy(i);
     }
 
     /* Free Phys Frames of Current Process */
@@ -225,9 +226,10 @@ void sys_exit(void) {
     
     /* Select next process to entry on CPU */
     list_del(&(current()->rq_list));
-    new_entry = RR_next_process();
-    RR_update_vars(new_entry);
-    task_switch(new_entry);
+    t=(union task_union *) list_head_to_task_struct(runqueue.next);
+    life=t->task.quantum;
+    t->task.nbtrans++;
+    task_switch(t);
 }
 
 int sys_getstats(int pid, struct stats *st) {
@@ -243,7 +245,8 @@ int sys_getstats(int pid, struct stats *st) {
 
     stt.total_tics=tsk->nbtics_cpu;
     stt.total_trans=tsk->nbtrans;
-    stt.remaining_tics=tsk->remaining_life;
+    /*if(pid==current()->Pid) stt.remaining_tics=life;
+    else */stt.remaining_tics=tsk->remaining_life;
 
     copy_to_user((void *) &stt, (void *)st, sizeof(struct stats));
 

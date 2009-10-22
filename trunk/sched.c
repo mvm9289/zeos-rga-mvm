@@ -134,43 +134,23 @@ void task_switch(union task_union *t) {
 
 void scheduler() { /* Round Robin */
     /* Scheduling */
-    union task_union *new_entry;
+    union task_union *t;
 
-    if(RR_need_context_switch()) {
-        RR_update_runqueue();
-        new_entry=RR_next_process();
-        RR_update_vars(new_entry);
-        task_switch(new_entry);
-    }
-}
-
-void RR_update_vars(union task_union *t) {
-    life=t->task.quantum;
-    t->task.nbtrans++;
-    t->task.remaining_life=life;
-}
-
-unsigned int RR_need_context_switch() {
     --life;
     current()->nbtics_cpu++;
     current()->remaining_life=life;
-    
-    if(life==0) {
+
+    if(!life) {
         if(list_is_last(runqueue.next, &runqueue)) {
             life=current()->quantum;
             current()->remaining_life=life;
-            return 0;
+            return;
         }
-        return 1;
+        list_del(&(current()->rq_list));
+        list_add_tail(&(current()->rq_list), &runqueue);
+        t=(union task_union *) list_head_to_task_struct(runqueue.next);
+        life=t->task.quantum;
+        t->task.nbtrans++;
+        task_switch(t);
     }
-    return 0;
-}
-
-void RR_update_runqueue() {
-    list_del(&(current()->rq_list));
-    list_add_tail(&(current()->rq_list), &runqueue);
-}
-
-union task_union *RR_next_process() {
-    return (union task_union *) list_head_to_task_struct(runqueue.next);
 }
