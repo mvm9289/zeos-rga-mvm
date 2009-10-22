@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stats.h>
 
+int errno;
+
 const char *sys_errlist[] = { "Operation not permitted",
                               "No such file or directory",
                               "No such process",

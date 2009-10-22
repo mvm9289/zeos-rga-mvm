@@ -14,7 +14,7 @@
 #define FREE 0
 #define ALLOC 1
 
-#define STD_QUANTUM 400
+#define STD_QUANTUM 20
 
 
 #define NR_SEM 10
@@ -83,11 +83,5 @@ struct task_struct* search_task(int pid);
 /* Scheduling */
 void task_switch(union task_union *t);
 void scheduler();
-
-/* Round Robin */
-void RR_update_vars(union task_union *t);
-unsigned int RR_need_context_switch();
-void RR_update_runqueue();
-union task_union *RR_next_process();
 
 #endif  /* __SCHED_H__ */
