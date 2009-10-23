@@ -4,18 +4,13 @@
 
 #include <string.h>
 
-int strlen(char *buffer)
-{
-
+int strlen(char *buffer) {
     int i = 0;
     while(buffer[i] != '\0') ++i;
     return i;
-
 }
 
-void itoa(int num, char *buffer)
-{
-
+void itoa(int num, char *buffer) {
     int i, j, sign;
     char aux;
 
@@ -39,5 +34,4 @@ void itoa(int num, char *buffer)
         buffer[i] = buffer[j];
         buffer[j] = aux;
     }
-
 }
