@@ -21,7 +21,6 @@ int init_frames( void );
 int alloc_frame( void );
 void free_frame( unsigned int frame );
 int alloc_task_struct();
-//void dealloc_task_struct(int tsk);
 int initialize_P0_frames(void);
 void set_user_pages( void );
 

@@ -2,8 +2,7 @@
 #include <types.h>
 #include <mm_address.h>
 
-void copy_data(void *start, void *dest, int size)
-{
+void copy_data(void *start, void *dest, int size) {
     DWord *p = start, *q = dest;
     Byte *p1, *q1;
     while(size > 4) {
@@ -17,9 +16,9 @@ void copy_data(void *start, void *dest, int size)
         size --;
     }
 }
+
 /* Copia de espacio de usuario a espacio de kernel, devuelve 0 si ok y -1 si error*/
-int copy_from_user(void *start, void *dest, int size)
-{
+int copy_from_user(void *start, void *dest, int size) {
     DWord *p = start, *q = dest;
     Byte *p1, *q1;
     while(size > 4) {
@@ -34,9 +33,9 @@ int copy_from_user(void *start, void *dest, int size)
     }
     return 0;
 }
+
 /* Copia de espacio de kernel a espacio de usuario, devuelve 0 si ok y -1 si error*/
-int copy_to_user(void *start, void *dest, int size)
-{
+int copy_to_user(void *start, void *dest, int size) {
     DWord *p = start, *q = dest;
     Byte *p1, *q1;
     while(size > 4) {
@@ -61,8 +60,7 @@ int copy_to_user(void *start, void *dest, int size)
  * Returns true (nonzero) if the memory block may be valid,
  *         false (zero) if it is definitely invalid
  */
-int access_ok(int type, const void * addr, unsigned long size)
-{
+int access_ok(int type, const void * addr, unsigned long size) {
     unsigned long pag_start = NUM_PAGE_ADDR((unsigned long)addr);
     unsigned long pag_end = NUM_PAGE_ADDR(((unsigned long)addr+size));
 

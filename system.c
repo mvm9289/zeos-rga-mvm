@@ -37,8 +37,7 @@ unsigned int *p_rdtr = (unsigned int *) KERNEL_START+2;
 /*
  * This function MUST be 'inline' because it modifies the %esp setInterruptHandler(13, general_protection_handler, 0);
  */
-inline void set_seg_regs(Word data_sel, Word stack_sel, DWord esp)
-{
+inline void set_seg_regs(Word data_sel, Word stack_sel, DWord esp) {
     esp = esp - 5*sizeof(DWord); /* To avoid overwriting task 1 */
     __asm__ __volatile__(
         "cld\n\t"
@@ -50,7 +49,6 @@ inline void set_seg_regs(Word data_sel, Word stack_sel, DWord esp)
         "mov %2,%%esp"
     : /* no output */
     : "r" (data_sel), "r" (stack_sel), "g" (esp) );
-
 }
 
 /*
@@ -58,9 +56,7 @@ inline void set_seg_regs(Word data_sel, Word stack_sel, DWord esp)
  */
 
 int __attribute__((__section__(".text.main")))
-main(void)
-{
-
+main(void) {
     set_eflags();
 
     /* Define the kernel segment registers */
@@ -97,5 +93,3 @@ main(void)
     /* The execution never arrives to this point */
     return 0;
 }
-
-

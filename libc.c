@@ -146,8 +146,7 @@ void perror() {
 
 
 /* Wrapper of  write system call*/
-int write(int fd,char *buffer,int size)
-{
+int write(int fd,char *buffer,int size) {
     int res=0;
     __asm__ __volatile (
         "pushl %%ebx\n"
@@ -167,9 +166,7 @@ int write(int fd,char *buffer,int size)
     return res;
 }
 
-int getpid (void)
-{
-
+int getpid (void) {
     int res=0;
     __asm__ __volatile (
         "movl $20, %%eax\n"
@@ -180,8 +177,7 @@ int getpid (void)
     return res;
 }
 
-int fork(void)
-{
+int fork(void) {
     int res=0;
     __asm__ __volatile__ (
         "movl $2, %%eax\n"
@@ -197,9 +193,7 @@ int fork(void)
     return res;
 }
 
-int nice (int quantum)
-{
-
+int nice (int quantum) {
     int res=0;
     __asm__ __volatile__ (
         "pushl %%ebx\n"
@@ -218,8 +212,7 @@ int nice (int quantum)
     return res;
 }
 
-void exit (void)    
-{
+void exit (void) {
     __asm__ __volatile__ (
         "movl  $1, %eax\n"
         "int $0x80"

@@ -29,7 +29,7 @@ LINKFLAGS = -g
 SYSOBJ = interrupt.o entry.o io.o sys.o sched.o mm.o devices.o utils.o hardware.o string.o
 
 #add to USROBJ the object files required to complete the user program
-USROBJ = libc.o string.o  libjp2.a
+USROBJ = libc.o string.o # libjp2.a
 
 all:zeos.bin
 
@@ -55,21 +55,21 @@ entry.s: entry.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 
 user.o:user.c $(INCLUDEDIR)/libc.h
 
-interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/entry.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/string.h
+interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/entry.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/string.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/sys.h
 
 string.o:string.c $(INCLUDEDIR)/string.h
 
 io.o:io.c $(INCLUDEDIR)/io.h $(INCLUDEDIR)/utils.h
 
-libc.o:libc.c $(INCLUDEDIR)/libc.h $(INCLUDEDIR)/string.h
+libc.o:libc.c $(INCLUDEDIR)/libc.h $(INCLUDEDIR)/string.h $(INCLUDEDIR)/stats.h
 
 mm.o:mm.c $(INCLUDEDIR)/types.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/sched.h
 
-sched.o:sched.c $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h
+sched.o:sched.c $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/list.h
 
-sys.o:sys.c $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/errno.h
+sys.o:sys.c $(INCLUDEDIR)/sys.h $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/errno.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/mm_address.h $(INCLUDEDIR)/errno.h
 
-utils.o:utils.c $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/types.h
+utils.o:utils.c $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/mm_address.h
 
 devices.o:devices.c $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/io.h
 

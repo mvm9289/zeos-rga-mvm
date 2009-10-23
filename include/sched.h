@@ -14,8 +14,12 @@
 #define FREE 0
 #define ALLOC 1
 
-#define STD_QUANTUM 20
+#define INIT 1
+#define NOT_INIT 0
+#define OWNER 1
+#define NOT_OWNER 0
 
+#define STD_QUANTUM 100
 
 #define NR_SEM 10
 
@@ -62,7 +66,7 @@ struct semaphore {
 
     struct list_head blockqueue;
 
-    unsigned int allocation;
+    unsigned int initialization;
 };
 
 extern struct semaphore sems[NR_SEM];
@@ -70,7 +74,10 @@ extern struct semaphore sems[NR_SEM];
 /* System Initialization */
 
 /* Tasks Structs Initialization */
-void init_tasks();
+inline void init_tasks();
+
+/* Sems Initialization */
+inline void init_sems();
 
 /* Inicialitza les dades del proces inicial */
 void init_task0(void);

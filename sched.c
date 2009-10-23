@@ -5,7 +5,6 @@
 #include <sched.h>
 #include <list.h>
 #include <mm.h>
-#include <io.h>
 
 unsigned int set_eoi=0;
 unsigned long next_child_pid=1;
@@ -20,22 +19,21 @@ struct protected_task_struct task[NR_TASKS]
 
 struct semaphore sems[NR_SEM];
 
-void init_tasks() {
+inline void init_tasks() {
     int i;
 
     for(i=0; i<NR_TASKS; i++)
         task[i].t.task.allocation=FREE;
 }
 
-void init_sems() {
+inline void init_sems() {
     int i;
 
     for(i=0; i<NR_SEM; i++)
-        sems[i].allocation=FREE;
+        sems[i].initialization=NOT_INIT;
 }
 
-void init_task0(void)
-{
+void init_task0(void) {
     int i;
 
     /* System Initialization */
@@ -59,7 +57,7 @@ void init_task0(void)
         task[0].t.task.phys_frames[i]=pagusr_table[PAG_LOG_INIT_DATA_P0+i].bits.pbase_addr;
     /* Initializes task0 sems_owner */
     for(i=0; i<NR_SEM; i++)
-        task[0].t.task.sems_owner[i]=0;
+        task[0].t.task.sems_owner[i]=NOT_OWNER;
     
 
     task[0].t.task.allocation=ALLOC;
@@ -69,15 +67,13 @@ void init_task0(void)
     list_add(&(task[0].t.task.rq_list), &runqueue);
 }
 
-struct task_struct* current()
-{
+struct task_struct* current() {
 	unsigned int esp;
 	__asm__ __volatile__ (" movl %%esp, %0" :"=g" (esp));
 	return (struct task_struct *)(esp&0xFFFFF000);
 }
 
-struct task_struct* list_head_to_task_struct(struct list_head *l)
-{
+struct task_struct* list_head_to_task_struct(struct list_head *l) {
 	return list_entry(l, struct task_struct, rq_list);
 }
 
@@ -132,8 +128,7 @@ void task_switch(union task_union *t) {
     __asm__ ("iret");
 }
 
-void scheduler() { /* Round Robin */
-    /* Scheduling */
+void scheduler() { /* Scheduling: Round Robin */
     union task_union *t;
 
     --life;
@@ -151,6 +146,7 @@ void scheduler() { /* Round Robin */
         t=(union task_union *) list_head_to_task_struct(runqueue.next);
         life=t->task.quantum;
         t->task.nbtrans++;
+        t->task.remaining_life=life;
         task_switch(t);
     }
 }

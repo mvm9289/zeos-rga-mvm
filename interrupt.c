@@ -9,6 +9,7 @@
 #include <io.h>
 #include <string.h>
 #include <sched.h>
+#include <sys.h>
 
 #define KERNEL_LEVEL 0
 #define USER_LEVEL 3
@@ -42,8 +43,7 @@ char char_map[] =
         '\0','\0'
     };
 
-void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
-{
+void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL) {
     /***********************************************************************/
     /* THE INTERRUPTION GATE FLAGS:                          R1: pg. 5-11  */
     /* ***************************                                         */
@@ -62,8 +62,7 @@ void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
     idt[vector].highOffset      = highWord((DWord)handler);
 }
 
-void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
-{
+void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL) {
     /***********************************************************************/
     /* THE TRAP GATE FLAGS:                                  R1: pg. 5-11  */
     /* ********************                                                */
@@ -85,8 +84,7 @@ void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
     idt[vector].flags           = flags;
     idt[vector].highOffset      = highWord((DWord)handler);
 }
-void setIdt()
-{
+void setIdt() {
     /* Program interrups/exception service routines */
     idtR.base  = (DWord)idt;
     idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
@@ -199,7 +197,7 @@ void page_fault_routine() {
     printk("\nPage Fault Exception\n");
 
     /* Process Exit */
-    sys_exit();//SE PUEDE???
+    sys_exit();
     
     while(1);
 }
@@ -214,14 +212,13 @@ void alignment_check_routine() {
     while(1);
 }
 
-void clock_routine()
-{
+void clock_routine() {
     char min_buff[10];
     char sec_buff[3];
     int aux;
 
     /* Elapsed Time */
-    /*++ticks;
+    ++ticks;
     if(ticks == 485)  // 485 =~ 1 sec
     {
         ticks = 0;
@@ -235,7 +232,7 @@ void clock_routine()
         printc_xy(X_CLOCK+2, Y_CLOCK, ':');
         if((aux = strlen(sec_buff)) == 1) printc_xy(X_CLOCK+3, Y_CLOCK, '0');
         printk_xy(X_CLOCK - aux+5, Y_CLOCK, sec_buff);
-    }*/
+    }
 
     /* Scheduling */
     set_eoi=1;
@@ -247,9 +244,7 @@ void keyboard_routine() {
     char key=inb(0x60);
     int cr;
     char ch;
-char buff[128];
-itoa(current()->Pid, buff); //-------------------------->PARA PRUEBAS!!!!
-printk(buff);
+
     if(!(key & 0x80)) {
         cr = (key & 0x7F);
         ch = char_map[cr];

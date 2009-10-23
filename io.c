@@ -16,8 +16,7 @@ Byte x, y=15;
 unsigned char dirty_line = 1;
 
 /* Read a byte from 'port' */
-Byte inb (unsigned short port)
-{
+Byte inb (unsigned short port) {
     Byte v;
 
     __asm__ __volatile__ ("inb %w1,%0":"=a" (v):"Nd" (port));
@@ -47,8 +46,7 @@ void scroll_screen(void) {
     erase_line(23);
 }
 
-void printc(char c)
-{
+void printc(char c) {
     Word ch;
     DWord screen;
 
@@ -78,8 +76,7 @@ void printc(char c)
     }
 }
 
-void printk(char *string)
-{
+void printk(char *string) {
     int i;
     for (i = 0; string[i]; i++)
         printc(string[i]);
@@ -94,8 +91,7 @@ void printc_xy(int x, int y, char c) {
     asm("movw %0, (%1)" : : "g"(ch), "g"(screen));
 }
 
-void printk_xy(int x, int y, char *string)
-{
+void printk_xy(int x, int y, char *string) {
     int i;
     for (i = 0; string[i]; i++)
         printc_xy(x+i,y,string[i]);
