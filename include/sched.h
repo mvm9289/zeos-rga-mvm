@@ -7,6 +7,7 @@
 
 #include <list.h>
 #include <mm_address.h>
+#include <devices.h>
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
@@ -42,6 +43,8 @@ struct task_struct {
     unsigned long phys_frames[NUM_PAG_DATA];
 
     unsigned long sems_owner[NR_SEM];
+
+    chanel chanel_table[CTABLE_SIZE];
 
     struct list_head rq_list;
 
