@@ -58,7 +58,6 @@ void init_task0(void) {
     /* Initializes task0 sems_owner */
     for(i=0; i<NR_SEM; i++)
         task[0].t.task.sems_owner[i]=NOT_OWNER;
-    
 
     task[0].t.task.allocation=ALLOC;
     tasks_free--;
