@@ -50,22 +50,18 @@ void init_table_pages() {
     int i;
     unsigned int page;
     /* reset all entries */
-    for (i=0; i<TOTAL_PAGES; i++)
-    {
+    for (i=0; i<TOTAL_PAGES; i++) {
         pagusr_table[i].entry = 0;
     }
     /* Init kernel pages */
-    for (i=0; i<NUM_PAG_KERNEL; i++)
-    {
+    for (i=0; i<NUM_PAG_KERNEL; i++) {
         // Logical page equal to physical page (frame)
         pagusr_table[i].bits.pbase_addr = i;
         pagusr_table[i].bits.rw = 1;
         pagusr_table[i].bits.present = 1;
     }
     /* Protect task_structs */
-    for (i=0; i<NR_TASKS; i++)
-    {
-
+    for (i=0; i<NR_TASKS; i++) {
         page = ((DWord)&task[i].task_protect>>12); //Get the page to protect.
         pagusr_table[page].bits.pbase_addr = page;
         pagusr_table[page].bits.rw = 0; //Disable write access to protected page
@@ -241,11 +237,12 @@ void free_frame( unsigned int frame ) {
 int alloc_task_struct() {
     int tsk;
     /* Search allocation for task struct */
-    for(tsk=1; tsk<NR_TASKS; tsk++)
+    for(tsk=1; tsk<NR_TASKS; tsk++) {
         if(task[tsk].t.task.allocation==FREE) {
             task[tsk].t.task.allocation=ALLOC;
             return tsk;
         }
+    }
 
     return -1;
 }
