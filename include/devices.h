@@ -5,9 +5,11 @@
 #define DIR_ENTRYS 10
 #define CTABLE_SIZE 10
 
-#define O_RDONLY 0
-#define O_WRONLY 1
-#define O_RWONLY 2
+#define O_RDONLY 1
+#define O_WRONLY 2
+#define O_RDWR 3
+
+#define NR_TASKS      10 //RETOCAR
 
 struct file_operations {
     void *read;
@@ -25,12 +27,20 @@ struct directory {
 };
 
 struct TFO_item {
-};
-
-struct channel {
+    int num_refs;
     int seq_pos;
     int init_acces_mode;
 };
+
+struct channel {
+    unsigned int free;
+    struct TFO_item *TFO_pointer;
+    struct logic_device *log_device;
+};
+
+struct directory DIR;
+struct file_operations ops[DIR_ENTRYS];
+struct TFO_item TFO[CTABLE_SIZE*NR_TASKS];
 
 int sys_write_console(char *buffer,int size);
 int sys_read_keyboard();

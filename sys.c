@@ -32,11 +32,11 @@ int sys_write(int fd,char *buffer, int size) {
 
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += sys_write_console(to_write, W_SIZE);
+        bytes += current().channel_table[fd].log_device->operations->write(to_write, W_SIZE);//sys_write_console(to_write, W_SIZE);
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += sys_write_console(to_write, size);
+    bytes += current().channel_table[fd].log_device->operations->write(to_write, W_SIZE);//sys_write_console(to_write, size);
 
     return bytes;
 }
@@ -97,6 +97,11 @@ int sys_fork(void) {
         task[tsk].t.task.sems_owner[i]=NOT_OWNER;
     /* Child return value */
     task[tsk].t.stack[KERNEL_STACK_SIZE-10]=0;
+    /* Child CT */
+    for(i=0; i<CTABLE_SIZE; i++) {
+        if(!task[tsk].t.task.channel_table[i].free)
+            task[tsk].t.task.channel_table[i].TFO_pointer->num_refs++;
+    }
 
     /* Insert child in RUNQUEUE */
     list_add_tail(&task[tsk].t.task.rq_list, &runqueue);
