@@ -17,14 +17,17 @@ struct file_operations {
 struct logic_device {
     char name[FILE_NAME_SIZE];
     int acces_mode;
-    file_operations *operations;
+    struct file_operations *operations;
 };
 
 struct directory {
-    logic_device dir_entrys[DIR_ENTRYS];
+    struct logic_device dir_entrys[DIR_ENTRYS];
 };
 
-struct chanel {
+struct TFO_item {
+};
+
+struct channel {
     int seq_pos;
     int init_acces_mode;
 };

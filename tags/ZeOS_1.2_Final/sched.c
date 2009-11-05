@@ -7,7 +7,7 @@
 #include <mm.h>
 
 unsigned int set_eoi=0;
-unsigned long next_child_pid=1;
+unsigned long next_child_pid=0;
 unsigned long life;
 unsigned int tasks_free=NR_TASKS;
 

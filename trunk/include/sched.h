@@ -44,7 +44,7 @@ struct task_struct {
 
     unsigned long sems_owner[NR_SEM];
 
-    chanel chanel_table[CTABLE_SIZE];
+    struct channel chanel_table[CTABLE_SIZE];
 
     struct list_head rq_list;
 
