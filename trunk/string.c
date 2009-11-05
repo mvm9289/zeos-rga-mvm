@@ -10,6 +10,13 @@ int strlen(char *buffer) {
     return i;
 }
 
+void strcpy(char *str1, char *str2) {
+    int i;
+    for(i=0; str2[i] != '\0'; i++)
+        str1[i]=str2[i];
+    str1[i]='\0';
+}
+
 void itoa(int num, char *buffer) {
     int i, j, sign;
     char aux;

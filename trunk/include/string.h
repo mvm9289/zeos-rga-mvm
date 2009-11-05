@@ -8,6 +8,7 @@
 #include <types.h>
 
 int strlen(char *buffer);
+void strcpy(char *str1, char *str2);
 void itoa(int num, char *buffer);
 
 #endif  /* __STRING_H__ */

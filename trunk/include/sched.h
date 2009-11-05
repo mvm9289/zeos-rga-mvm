@@ -44,7 +44,7 @@ struct task_struct {
 
     unsigned long sems_owner[NR_SEM];
 
-    struct channel chanel_table[CTABLE_SIZE];
+    struct channel channel_table[CTABLE_SIZE];
 
     struct list_head rq_list;
 
@@ -93,5 +93,8 @@ struct task_struct* search_task(int pid);
 /* Scheduling */
 void task_switch(union task_union *t);
 void scheduler();
+
+/* Devices */
+void init_devices();
 
 #endif  /* __SCHED_H__ */
