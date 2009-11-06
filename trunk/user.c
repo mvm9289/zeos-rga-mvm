@@ -6,7 +6,6 @@ main(void) {
     /*__asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
     /* Uncomment next line to call the initial routine for the test cases */
     /* runjp(); */
-
     while(1);
     return 0;
 }
