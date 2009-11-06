@@ -21,7 +21,7 @@ int sys_ni_syscall() {
     return -ENOSYS;
 }
 
-int sys_write(int fd,char *buffer, int size) {
+int sys_write(int fd, char *buffer, int size) {
     char to_write[W_SIZE];
     int bytes=0;
     int err = comprova_fd(fd, WRITE);
@@ -32,11 +32,11 @@ int sys_write(int fd,char *buffer, int size) {
 
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += current().channel_table[fd].log_device->operations->write(to_write, W_SIZE);//sys_write_console(to_write, W_SIZE);
+        bytes += file_operations[current()->channel_table[fd].log_device->ops_indx].sys_write_dev(0, to_write, W_SIZE);
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += current().channel_table[fd].log_device->operations->write(to_write, W_SIZE);//sys_write_console(to_write, size);
+    bytes += file_operations[current()->channel_table[fd].log_device->ops_indx].sys_write_dev(0, to_write, size);
 
     return bytes;
 }
@@ -100,7 +100,7 @@ int sys_fork(void) {
     /* Child CT */
     for(i=0; i<CTABLE_SIZE; i++) {
         if(!task[tsk].t.task.channel_table[i].free)
-            task[tsk].t.task.channel_table[i].TFO_pointer->num_refs++;
+            OFT[task[tsk].t.task.channel_table[i].OFT_indx].num_refs++;
     }
 
     /* Insert child in RUNQUEUE */

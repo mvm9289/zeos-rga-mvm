@@ -5,7 +5,7 @@
 #include <sched.h>
 #include <list.h>
 #include <mm.h>
-#include <string.h>
+#include <devices.h>
 
 unsigned int set_eoi=0;
 unsigned long next_child_pid=1;
@@ -63,24 +63,24 @@ void init_task0(void) {
     /* Initializes CT */
     for(i=3; i<CTABLE_SIZE; i++)
         task[0].t.task.channel_table[i].free=1;
-    task[0].t.task.channel_table[0].TFO_pointer = &TFO[0];
-    task[0].t.task.channel_table[0].log_device = &DIR.dir_entrys[0];
+    task[0].t.task.channel_table[0].OFT_indx=0;
+    task[0].t.task.channel_table[0].log_device = &DIR[0];
     task[0].t.task.channel_table[0].free=0;
-    task[0].t.task.channel_table[1].TFO_pointer = &TFO[1];
-    task[0].t.task.channel_table[1].log_device = &DIR.dir_entrys[1];
+    task[0].t.task.channel_table[1].OFT_indx = 1;
+    task[0].t.task.channel_table[1].log_device = &DIR[1];
     task[0].t.task.channel_table[1].free=0;
-    task[0].t.task.channel_table[2].TFO_pointer = &TFO[2];
-    task[0].t.task.channel_table[2].log_device = &DIR.dir_entrys[1];
+    task[0].t.task.channel_table[2].OFT_indx = 2;
+    task[0].t.task.channel_table[2].log_device = &DIR[1];
     task[0].t.task.channel_table[2].free=0;
-    TFO[0].num_refs=1;
-    TFO[0].seq_pos=0;
-    TFO[0].init_acces_mode=O_RDONLY;
-    TFO[1].num_refs=1;
-    TFO[1].seq_pos=0;
-    TFO[1].init_acces_mode=O_WRONLY;
-    TFO[2].num_refs=1;
-    TFO[2].seq_pos=0;
-    TFO[2].init_acces_mode=O_WRONLY;
+    OFT[0].num_refs=1;
+    OFT[0].seq_pos=0;
+    OFT[0].init_acces_mode=O_RDONLY;
+    OFT[1].num_refs=1;
+    OFT[1].seq_pos=0;
+    OFT[1].init_acces_mode=O_WRONLY;
+    OFT[2].num_refs=1;
+    OFT[2].seq_pos=0;
+    OFT[2].init_acces_mode=O_WRONLY;
 
     task[0].t.task.allocation=ALLOC;
     tasks_free--;
@@ -171,18 +171,4 @@ void scheduler() { /* Scheduling: Round Robin */
         t->task.remaining_life=life;
         task_switch(t);
     }
-}
-
-void init_devices() {
-    strcpy(DIR.dir_entrys[0].name, "KEYBOARD");
-    DIR.dir_entrys[0].acces_mode = O_RDONLY;
-    ops[0].read = (void *)sys_read_keyboard;
-    ops[0].write = NULL;
-    DIR.dir_entrys[0].operations = &ops[0];
-
-    strcpy(DIR.dir_entrys[1].name, "DISPLAY");
-    DIR.dir_entrys[1].acces_mode = O_WRONLY;
-    ops[1].read = NULL;
-    ops[1].write = (void *)sys_write_console;
-    DIR.dir_entrys[1].operations = &ops[1];
 }

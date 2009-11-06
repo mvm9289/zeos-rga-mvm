@@ -7,7 +7,7 @@
 
 #include <list.h>
 #include <mm_address.h>
-#include <devices.h>
+#include <systemfile.h>
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
@@ -93,8 +93,5 @@ struct task_struct* search_task(int pid);
 /* Scheduling */
 void task_switch(union task_union *t);
 void scheduler();
-
-/* Devices */
-void init_devices();
 
 #endif  /* __SCHED_H__ */
