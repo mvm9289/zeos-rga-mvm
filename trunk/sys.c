@@ -25,6 +25,7 @@ int sys_write(int fd, char *buffer, int size) {
     char to_write[W_SIZE];
     int bytes=0;
     int err = comprova_fd(fd, WRITE);
+    int indx_op = current()->channel_table[fd].log_device->ops_indx;
 
     if(err != 0) return err;
     if(!access_ok(READ, buffer, size)) return -EFAULT;
@@ -32,11 +33,11 @@ int sys_write(int fd, char *buffer, int size) {
 
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += file_operations[current()->channel_table[fd].log_device->ops_indx].sys_write_dev(0, to_write, W_SIZE);
+        bytes += file_operations[indx_op].sys_write_dev(0, to_write, W_SIZE); //RETOCAR 0
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += file_operations[current()->channel_table[fd].log_device->ops_indx].sys_write_dev(0, to_write, size);
+    bytes += file_operations[indx_op].sys_write_dev(0, to_write, size);
 
     return bytes;
 }
@@ -71,17 +72,16 @@ int sys_fork(void) {
         task[tsk].t.task.phys_frames[i]=fr;
 
         /* Copy Data Page */
-        set_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA, fr); // Set AUX page
-        set_cr3(); // Flush TLB
-        copy_data((void *) ((PAG_LOG_INIT_DATA_P0+i)<<12), (void *) ((PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA)<<12), PAGE_SIZE);
+        set_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i, fr); // Set AUX page
+        copy_data((void *) ((PAG_LOG_INIT_DATA_P0+i)<<12), (void *) ((PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i)<<12), PAGE_SIZE);
+        del_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i); // Delete AUX page
     }
-    del_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA); // Delete AUX page
     set_cr3(); // Flush TLB
 
     /* Initialize child task_struct */
 
     /* New PID for child process */
-    task[tsk].t.task.Pid=next_child_pid;
+    task[tsk].t.task.Pid=++next_child_pid;
     /* Child PPid */
     task[tsk].t.task.PPid=current()->Pid;
     /* Child Quantum */
@@ -97,7 +97,7 @@ int sys_fork(void) {
         task[tsk].t.task.sems_owner[i]=NOT_OWNER;
     /* Child return value */
     task[tsk].t.stack[KERNEL_STACK_SIZE-10]=0;
-    /* Child CT */
+    /* Child Channel Table */
     for(i=0; i<CTABLE_SIZE; i++) {
         if(!task[tsk].t.task.channel_table[i].free)
             OFT[task[tsk].t.task.channel_table[i].OFT_indx].num_refs++;
@@ -106,7 +106,7 @@ int sys_fork(void) {
     /* Insert child in RUNQUEUE */
     list_add_tail(&task[tsk].t.task.rq_list, &runqueue);
 
-    return next_child_pid++;
+    return next_child_pid;
 }
 
 int sys_nice(int quantum) {

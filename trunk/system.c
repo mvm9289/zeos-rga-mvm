@@ -11,6 +11,7 @@
 #include <mm.h>
 #include <io.h>
 #include <utils.h>
+#include <devices.h>
 
 
 int (*usr_main)(void) = (void *) PH_USER_START;
@@ -72,6 +73,9 @@ main(void) {
 
     /* Initialize Memory */
     init_mm();
+
+    /* Initialize Devices */
+    init_devices();
 
     /* Initialize task 0 data */
     init_task0();

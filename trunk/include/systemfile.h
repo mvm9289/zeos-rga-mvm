@@ -9,8 +9,6 @@
 #define O_WRONLY 2
 #define O_RDWR 3
 
-#define NR_TASKS      10 //RETOCAR
-
 struct {
     int (*sys_read_dev)(int, char *, int);
     int (*sys_write_dev)(int, const char *, int);
@@ -24,16 +22,18 @@ struct logic_device {
 
 struct logic_device DIR[DIR_ENTRIES];
 
-struct {
-    int num_refs;
-    int seq_pos;
-    int init_acces_mode;
-} OFT[CTABLE_SIZE*NR_TASKS];
-
 struct channel {
     unsigned int free;
     unsigned int OFT_indx;
     struct logic_device *log_device;
 };
+
+#include <sched.h>
+
+struct {
+    int num_refs;
+    int seq_pos;
+    int init_acces_mode;
+} OFT[CTABLE_SIZE*NR_TASKS];
 
 #endif
