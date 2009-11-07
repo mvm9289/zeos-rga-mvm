@@ -7,7 +7,6 @@
 
 #include <list.h>
 #include <mm_address.h>
-#include <systemfile.h>
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
@@ -23,6 +22,8 @@
 #define STD_QUANTUM 100
 
 #define NR_SEM 10
+
+#include <systemfile.h>
 
 extern unsigned int set_eoi;
 extern unsigned long next_child_pid;

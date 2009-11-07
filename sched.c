@@ -8,7 +8,7 @@
 #include <devices.h>
 
 unsigned int set_eoi=0;
-unsigned long next_child_pid=1;
+unsigned long next_child_pid=0;
 unsigned long life;
 unsigned int tasks_free=NR_TASKS;
 
@@ -40,7 +40,6 @@ void init_task0(void) {
     /* System Initialization */
     init_tasks();
     init_sems();
-    init_devices();
     
     /* Initializes paging for task0 adress space */
     initialize_P0_frames();
@@ -72,6 +71,7 @@ void init_task0(void) {
     task[0].t.task.channel_table[2].OFT_indx = 2;
     task[0].t.task.channel_table[2].log_device = &DIR[1];
     task[0].t.task.channel_table[2].free=0;
+    /* Update Opened Files Table */
     OFT[0].num_refs=1;
     OFT[0].seq_pos=0;
     OFT[0].init_acces_mode=O_RDONLY;
@@ -82,6 +82,7 @@ void init_task0(void) {
     OFT[2].seq_pos=0;
     OFT[2].init_acces_mode=O_WRONLY;
 
+    /* Mark this task is allocate */
     task[0].t.task.allocation=ALLOC;
     tasks_free--;
 
