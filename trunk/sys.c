@@ -9,10 +9,11 @@
 #include <mm.h>
 #include <mm_address.h>
 #include <stats.h>
+#include <string.h>
 
 int comprova_fd(int fd, int operacio) {
-    if(fd != 1) return -EBADF;
-    if(operacio != WRITE) return -EINVAL;
+    if(current()->channel_table[fd].free) return -EBADF;
+    if(operacio > OFT[current()->channel_table[fd].OFT_indx].init_acces_mode) return -EINVAL;
 
     return 0;
 }
@@ -21,11 +22,43 @@ int sys_ni_syscall() {
     return -ENOSYS;
 }
 
+int sys_open (char *path, int flags) { //TESTEAR
+	int entry;
+    int fd;
+    int OFT_indx;
+
+    if(strlen(path) > FILE_NAME_SIZE) return -ENAMETOOLONG;
+
+    if(!access_ok(WRITE, path, strlen(path))) return -EFAULT;
+
+	OFT_indx = getFreeOFTpos();
+    if(OFT_indx == -1) return -ENFILE;
+	
+	fd = getFreeChannel(current()->channel_table);
+	if(fd == -1) return -EMFILE;
+
+    entry = getFile(path);
+	if(entry == -1) return -ENOENT;
+
+	if (flags > DIR[entry].acces_mode) return -EACCES;
+
+	OFT[OFT_indx].num_refs++;
+	OFT[OFT_indx].seq_pos = 0;
+	OFT[OFT_indx].init_acces_mode = flags;
+
+	current()->channel_table[fd].free = 0;
+	current()->channel_table[fd].log_device = &DIR[entry];
+	current()->channel_table[fd].OFT_indx = OFT_indx;
+
+	return fd;
+}
+
 int sys_write(int fd, char *buffer, int size) {
     char to_write[W_SIZE];
     int bytes=0;
     int err = comprova_fd(fd, WRITE);
     int indx_op = current()->channel_table[fd].log_device->ops_indx;
+    int OFT_indx = current()->channel_table[fd].OFT_indx;
 
     if(err != 0) return err;
     if(!access_ok(READ, buffer, size)) return -EFAULT;
@@ -33,13 +66,36 @@ int sys_write(int fd, char *buffer, int size) {
 
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += file_operations[indx_op].sys_write_dev(0, to_write, W_SIZE); //RETOCAR 0
+        bytes += file_operations[indx_op].sys_write_dep(OFT[OFT_indx].seq_pos, to_write, W_SIZE);
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += file_operations[indx_op].sys_write_dev(0, to_write, size);
+    bytes += file_operations[indx_op].sys_write_dep(OFT[OFT_indx].seq_pos, to_write, size);
 
     return bytes;
+}
+
+int sys_dup (int fd) { //TESTEAR
+	int dup_fd = getFreeChannel(current()->channel_table);
+
+	if(dup_fd == -1) return -EMFILE;
+
+    current()->channel_table[dup_fd].free = 0;
+	current()->channel_table[dup_fd].log_device = current()->channel_table[fd].log_device;
+    current()->channel_table[dup_fd].OFT_indx = current()->channel_table[fd].OFT_indx;
+
+	OFT[current()->channel_table[fd].OFT_indx].num_refs++;
+
+	return dup_fd;
+}	
+
+int sys_close (int fd) { //TESTEAR
+	if(current()->channel_table[fd].free) return -EBADF;
+
+	current()->channel_table[fd].free = 1;
+	OFT[current()->channel_table[fd].OFT_indx].num_refs--;
+
+	return 0;
 }
 
 int sys_getpid(void) {

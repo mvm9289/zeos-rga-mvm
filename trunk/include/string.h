@@ -9,6 +9,7 @@
 
 int strlen(char *buffer);
 void strcpy(char *str1, char *str2);
+int strcmp (char *str1, char *str2);
 void itoa(int num, char *buffer);
 
 #endif  /* __STRING_H__ */

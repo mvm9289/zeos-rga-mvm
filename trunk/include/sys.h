@@ -2,11 +2,16 @@
 #define _SYS_H_
 
 #include <stats.h>
+#include <devices.h>
 
 #define W_SIZE 256
 
 int comprova_fd(int fd, int operacio);
 int sys_ni_syscall();
+int getFile(char *name);
+int getFreeChannel(struct channel *channels);
+int getFreeOFTpos();
+int sys_open (char *path, int flags);
 int sys_write(int fd,char *buffer, int size);
 int sys_getpid(void);
 int sys_fork(void);

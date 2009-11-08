@@ -23,7 +23,7 @@
 
 #define NR_SEM 10
 
-#include <systemfile.h>
+#include <devices.h>
 
 extern unsigned int set_eoi;
 extern unsigned long next_child_pid;

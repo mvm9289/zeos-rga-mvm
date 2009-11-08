@@ -146,6 +146,30 @@ void perror() {
 
 
 /* Wrapper of  write system call*/
+
+int open (const char *path, int flags) {
+	int res=0;
+    __asm__ __volatile (
+    "pushl %%ebx\n"
+    "movl 8(%%ebp), %%ebx\n"
+	"movl 12(%%ebp), %%ebx\n"
+    "movl $5, %%eax\n"
+    "int $0x80\n"
+    "movl %%eax, %0\n"
+    "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+int read(int fd, char *buffer, int size) {
+    return 0;
+}
+
 int write(int fd,char *buffer,int size) {
     int res=0;
     __asm__ __volatile (
@@ -164,6 +188,46 @@ int write(int fd,char *buffer,int size) {
     }
 
     return res;
+}
+
+int dup(int fd) {
+	int res=0;
+    __asm__ __volatile (
+    "pushl %%ebx\n"
+    "movl 8(%%ebp), %%ebx\n"
+    "movl $41, %%eax\n"
+    "int $0x80\n"
+    "movl %%eax, %0\n"
+    "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+int close(int fd) {
+	int res=0;
+    __asm__ __volatile (
+    "pushl %%ebx\n"
+    "movl 8(%%ebp), %%ebx\n"
+    "movl $6, %%eax\n"
+    "int $0x80\n"
+    "movl %%eax, %0\n"
+    "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
+}
+
+int unlink(const char *path) {
+    return 0;
 }
 
 int getpid (void) {
