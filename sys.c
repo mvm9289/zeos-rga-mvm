@@ -12,8 +12,12 @@
 #include <string.h>
 
 int comprova_fd(int fd, int operacio) {
+    int acces_mode;
+
     if(current()->channel_table[fd].free) return -EBADF;
-    if(operacio > OFT[current()->channel_table[fd].OFT_indx].init_acces_mode) return -EINVAL;
+
+    acces_mode = OFT[current()->channel_table[fd].OFT_indx].init_acces_mode;
+    if(operacio != acces_mode && acces_mode != O_RDWR) return -EINVAL;
 
     return 0;
 }
@@ -40,7 +44,7 @@ int sys_open (char *path, int flags) { //TESTEAR
     entry = getFile(path);
 	if(entry == -1) return -ENOENT;
 
-	if (flags > DIR[entry].acces_mode) return -EACCES;
+	if (flags != DIR[entry].acces_mode && DIR[entry].acces_mode != O_RDWR) return -EACCES;
 
 	OFT[OFT_indx].num_refs++;
 	OFT[OFT_indx].seq_pos = 0;
@@ -53,24 +57,50 @@ int sys_open (char *path, int flags) { //TESTEAR
 	return fd;
 }
 
+int sys_read(int fd, char *buffer, int size) { //TESTEAR
+    char readed[W_SIZE];
+    int bytes=0;
+    int err = comprova_fd(fd, READ);
+    int indx_op;
+    int OFT_indx;
+
+    if(err != 0) return err;
+    if(size < 0) return -EINVAL;
+    if(!access_ok(WRITE, buffer, size)) return -EFAULT;
+
+    indx_op = current()->channel_table[fd].log_device->ops_indx;
+    OFT_indx = current()->channel_table[fd].OFT_indx;
+    while (size > W_SIZE) {
+        bytes += file_operations[indx_op].sys_read_dep(&OFT[OFT_indx].seq_pos, readed, W_SIZE);
+        size -= W_SIZE;
+        copy_to_user(readed, buffer+bytes-W_SIZE, W_SIZE);
+    }
+    bytes += file_operations[indx_op].sys_read_dep(&OFT[OFT_indx].seq_pos, readed, size);
+    copy_to_user(readed, buffer+bytes-size, size);
+
+    return bytes;
+}
+
 int sys_write(int fd, char *buffer, int size) {
     char to_write[W_SIZE];
     int bytes=0;
     int err = comprova_fd(fd, WRITE);
-    int indx_op = current()->channel_table[fd].log_device->ops_indx;
-    int OFT_indx = current()->channel_table[fd].OFT_indx;
+    int indx_op;
+    int OFT_indx;
 
     if(err != 0) return err;
-    if(!access_ok(READ, buffer, size)) return -EFAULT;
     if(size < 0) return -EINVAL;
+    if(!access_ok(READ, buffer, size)) return -EFAULT;
 
+    indx_op = current()->channel_table[fd].log_device->ops_indx;
+    OFT_indx = current()->channel_table[fd].OFT_indx;
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += file_operations[indx_op].sys_write_dep(OFT[OFT_indx].seq_pos, to_write, W_SIZE);
+        bytes += file_operations[indx_op].sys_write_dep(&OFT[OFT_indx].seq_pos, to_write, W_SIZE);
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += file_operations[indx_op].sys_write_dep(OFT[OFT_indx].seq_pos, to_write, size);
+    bytes += file_operations[indx_op].sys_write_dep(&OFT[OFT_indx].seq_pos, to_write, size);
 
     return bytes;
 }

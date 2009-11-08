@@ -10,8 +10,8 @@
 #define O_RDWR 3
 
 struct {
-    int (*sys_read_dep)(int, char *, int);
-    int (*sys_write_dep)(int, const char *, int);
+    int (*sys_read_dep)(int *, char *, int);
+    int (*sys_write_dep)(int *, const char *, int);
 } file_operations[DIR_ENTRIES];
 
 struct logic_device {
@@ -42,7 +42,7 @@ void init_devices();
 inline int getFile(char *name);
 inline int getFreeChannel(struct channel *channels);
 inline int getFreeOFTpos();
-int sys_write_console(int pos, const char *buffer,int size);
-int sys_read_keyboard(int pos, char *buffer, int size);
+int sys_write_console(int *pos, const char *buffer,int size);
+int sys_read_keyboard(int *pos, char *buffer, int size);
 
 #endif /* DEVICES_H__*/

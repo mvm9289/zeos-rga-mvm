@@ -52,7 +52,7 @@ inline int getFreeOFTpos() {
 	return -1;
 }
 
-int sys_write_console (int pos, const char *buffer, int size) {
+int sys_write_console (int *pos, const char *buffer, int size) {
     int i;
     for(i=0; i<size; i++)
         printc(buffer[i]);
@@ -60,6 +60,6 @@ int sys_write_console (int pos, const char *buffer, int size) {
     return i;
 }
 
-int sys_read_keyboard (int pos, char *buffer, int size) {
-    return 0;
+int sys_read_keyboard (int *pos, char *buffer, int size) {
+    return size;
 }

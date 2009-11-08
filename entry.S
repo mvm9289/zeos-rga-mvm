@@ -219,7 +219,7 @@ ENTRY(sys_call_table)
 .long sys_ni_syscall // 0
 .long sys_exit
 .long sys_fork
-.long sys_ni_syscall
+.long sys_read
 .long sys_write
 .long sys_open       // 5
 .long sys_close

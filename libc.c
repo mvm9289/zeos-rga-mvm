@@ -167,7 +167,23 @@ int open (const char *path, int flags) {
 }
 
 int read(int fd, char *buffer, int size) {
-    return 0;
+    int res=0;
+    __asm__ __volatile (
+        "pushl %%ebx\n"
+        "movl 8(%%ebp), %%ebx\n"
+        "movl 12(%%ebp), %%ecx\n"
+        "movl 16(%%ebp), %%edx\n"
+        "movl $3, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
 }
 
 int write(int fd,char *buffer,int size) {
