@@ -35,7 +35,7 @@
 /**                                              **/
 /**************************************************/
 
-#define NB_SYSCALLS 35
+#define NB_SYSCALLS 41
 
 #define SAVE_ALL \
       pushl %gs; \
@@ -221,8 +221,8 @@ ENTRY(sys_call_table)
 .long sys_fork
 .long sys_ni_syscall
 .long sys_write
-.long sys_ni_syscall // 5
-.long sys_ni_syscall
+.long sys_open       // 5
+.long sys_close
 .long sys_ni_syscall
 .long sys_ni_syscall
 .long sys_ni_syscall
@@ -252,6 +252,12 @@ ENTRY(sys_call_table)
 .long sys_ni_syscall
 .long sys_nice
 .long sys_getstats   // 35
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall
+.long sys_ni_syscall // 40
+.long sys_dup
 
 ENTRY(syscall_handler)
 SAVE_ALL

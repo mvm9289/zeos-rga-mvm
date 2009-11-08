@@ -17,7 +17,12 @@ void perror(); /* print errno error message */
 
 
 /* Wrapper of system calls*/
+int open(const char *path, int flags);
+int read(int fd, char *buffer, int size);
 int write(int fd,char *buffer,int size);
+int dup(int fd);
+int close(int fd);
+int unlink(const char *path);
 
 int getpid(void);
 int fork(void);

@@ -17,6 +17,16 @@ void strcpy(char *str1, char *str2) {
     str1[i]='\0';
 }
 
+int strcmp(char *str1, char *str2) {
+    int i;
+
+	if(strlen(str1) != strlen(str2)) return 0;
+    for(i=0; str1[i] != '\0'; i++)
+        if (str1[i]!=str2[i]) return 0;
+
+    return 1;
+}
+
 void itoa(int num, char *buffer) {
     int i, j, sign;
     char aux;
