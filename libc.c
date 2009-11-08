@@ -152,7 +152,7 @@ int open (const char *path, int flags) {
     __asm__ __volatile (
     "pushl %%ebx\n"
     "movl 8(%%ebp), %%ebx\n"
-	"movl 12(%%ebp), %%ebx\n"
+	"movl 12(%%ebp), %%ecx\n"
     "movl $5, %%eax\n"
     "int $0x80\n"
     "movl %%eax, %0\n"

@@ -14,7 +14,9 @@
 extern int errno;
 void perror(); /* print errno error message */
 
-
+#define O_RDONLY 1
+#define O_WRONLY 2 // HACER ALGO CON ESTO
+#define O_RDWR 3
 
 /* Wrapper of system calls*/
 int open(const char *path, int flags);

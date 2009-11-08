@@ -25,6 +25,17 @@ void init_devices() {
 	    OFT[i].num_refs = 0;
 }
 
+inline int pathlen_isOK(const char *path) {
+    int i = 0;
+
+    while(path[i] != '\0') {
+        ++i;
+        if(i >= FILE_NAME_SIZE) return 0;
+    }
+
+    return 1;
+}
+
 inline int getFile(char *name) {
 	int i;
 

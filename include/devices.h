@@ -39,6 +39,7 @@ struct {
 
 
 void init_devices();
+inline int pathlen_isOK(const char *path);
 inline int getFile(char *name);
 inline int getFreeChannel(struct channel *channels);
 inline int getFreeOFTpos();
