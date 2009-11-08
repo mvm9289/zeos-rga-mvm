@@ -26,14 +26,14 @@ int sys_ni_syscall() {
     return -ENOSYS;
 }
 
-int sys_open (char *path, int flags) { //TESTEAR
+int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT
 	int entry;
     int fd;
     int OFT_indx;
 
-    if(strlen(path) > FILE_NAME_SIZE) return -ENAMETOOLONG;
+    if(!access_ok(READ, path, FILE_NAME_SIZE)) return -EFAULT;
 
-    if(!access_ok(WRITE, path, strlen(path))) return -EFAULT;
+    if(!pathlen_isOK(path)) return -ENAMETOOLONG; //NO ME GUSTA!!!
 
 	OFT_indx = getFreeOFTpos();
     if(OFT_indx == -1) return -ENFILE;
@@ -43,6 +43,8 @@ int sys_open (char *path, int flags) { //TESTEAR
 
     entry = getFile(path);
 	if(entry == -1) return -ENOENT;
+
+    if(flags < O_RDONLY || flags > O_RDWR) return -EINVAL;
 
 	if (flags != DIR[entry].acces_mode && DIR[entry].acces_mode != O_RDWR) return -EACCES;
 
@@ -105,7 +107,10 @@ int sys_write(int fd, char *buffer, int size) {
     return bytes;
 }
 
-int sys_dup (int fd) { //TESTEAR
+int sys_dup (int fd) { //TESTEAR CON O_CREAT
+    if(fd < 0 || fd > CTABLE_SIZE) return -EBADF;
+	if(current()->channel_table[fd].free) return -EBADF;
+
 	int dup_fd = getFreeChannel(current()->channel_table);
 
 	if(dup_fd == -1) return -EMFILE;
@@ -119,7 +124,8 @@ int sys_dup (int fd) { //TESTEAR
 	return dup_fd;
 }	
 
-int sys_close (int fd) { //TESTEAR
+int sys_close (int fd) {
+    if(fd < 0 || fd > CTABLE_SIZE) return -EBADF;
 	if(current()->channel_table[fd].free) return -EBADF;
 
 	current()->channel_table[fd].free = 1;
