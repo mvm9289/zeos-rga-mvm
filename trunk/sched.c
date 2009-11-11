@@ -53,6 +53,7 @@ void init_task0(void) {
     task[0].t.task.quantum=STD_QUANTUM;
     life=STD_QUANTUM;
     task[0].t.task.nbtics_cpu=0;
+    task[0].t.task.request_chars_to_keyboard=0;
     /* Initializes phys frames for task 0 */
     for(i=0; i<NUM_PAG_DATA; i++)
         task[0].t.task.phys_frames[i]=pagusr_table[PAG_LOG_INIT_DATA_P0+i].bits.pbase_addr;
@@ -62,25 +63,25 @@ void init_task0(void) {
     /* Initializes CT */
     for(i=3; i<CTABLE_SIZE; i++)
         task[0].t.task.channel_table[i].free=1;
-    task[0].t.task.channel_table[0].OFT_indx=0;
-    task[0].t.task.channel_table[0].log_device = &DIR[0];
+    task[0].t.task.channel_table[0].opened_file = &OFT[0];
     task[0].t.task.channel_table[0].free=0;
-    task[0].t.task.channel_table[1].OFT_indx = 1;
-    task[0].t.task.channel_table[1].log_device = &DIR[1];
+    task[0].t.task.channel_table[1].opened_file = &OFT[1];
     task[0].t.task.channel_table[1].free=0;
-    task[0].t.task.channel_table[2].OFT_indx = 2;
-    task[0].t.task.channel_table[2].log_device = &DIR[1];
+    task[0].t.task.channel_table[2].opened_file = &OFT[2];
     task[0].t.task.channel_table[2].free=0;
     /* Update Opened Files Table */
     OFT[0].num_refs=1;
     OFT[0].seq_pos=0;
-    OFT[0].init_acces_mode=O_RDONLY;
+    OFT[0].init_access_mode=O_RDONLY;
+    OFT[0].file = &DIR[0];
     OFT[1].num_refs=1;
     OFT[1].seq_pos=0;
-    OFT[1].init_acces_mode=O_WRONLY;
+    OFT[1].init_access_mode=O_WRONLY;
+    OFT[1].file = &DIR[1];
     OFT[2].num_refs=1;
     OFT[2].seq_pos=0;
-    OFT[2].init_acces_mode=O_WRONLY;
+    OFT[2].init_access_mode=O_WRONLY;
+    OFT[2].file = &DIR[2];
 
     /* Mark this task is allocate */
     task[0].t.task.allocation=ALLOC;

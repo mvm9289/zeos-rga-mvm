@@ -1,0 +1,4 @@
+-tamaño TFO
+-Comprovacion PATH en el sys_open
+-read por partes?
+-Si se llena el buffer y nadie ha hecho request?
