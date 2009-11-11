@@ -26,10 +26,10 @@ SYSLDFLAGS = -T system.lds
 USRLDFLAGS = -T user.lds
 LINKFLAGS = -g 
 
-SYSOBJ = interrupt.o entry.o io.o sys.o sched.o mm.o devices.o utils.o hardware.o string.o
+SYSOBJ = interrupt.o entry.o io.o sys.o sched.o mm.o devices.o utils.o hardware.o string.o keyboard.o
 
 #add to USROBJ the object files required to complete the user program
-USROBJ = libc.o string.o # libjpclose.a
+USROBJ = libc.o string.o # libjpwrite.a
 
 all:zeos.bin
 
@@ -74,6 +74,8 @@ utils.o:utils.c $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/mm_add
 devices.o:devices.c $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/io.h
 
 hardware.o:hardware.c $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/types.h
+
+keyboard.o:keyboard.c $(INCLUDEDIR)/keyboard.h
 
 
 system.o:system.c $(INCLUDEDIR)/hardware.h system.lds $(SYSOBJ) $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/system.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/mm_address.h 

@@ -9,40 +9,44 @@
 #define O_WRONLY 2
 #define O_RDWR 3
 
-struct {
+struct file_operations {
     int (*sys_read_dep)(int *, char *, int);
     int (*sys_write_dep)(int *, const char *, int);
-} file_operations[DIR_ENTRIES];
+};
+
+struct file_operations file_ops[DIR_ENTRIES];
 
 struct logic_device {
     char name[FILE_NAME_SIZE];
-    int acces_mode;
-    unsigned int ops_indx;
+    int access_mode;
+    struct file_operations *ops;
 };
 
 struct logic_device DIR[DIR_ENTRIES];
 
 struct channel {
     unsigned int free;
-    unsigned int OFT_indx;
-    struct logic_device *log_device;
+    struct OFT_item *opened_file;
 };
 
 #include <sched.h>
 
-struct {
+struct OFT_item {
     int num_refs;
     int seq_pos;
-    int init_acces_mode;
-} OFT[CTABLE_SIZE*NR_TASKS];
+    int init_access_mode;
+    struct logic_device *file;
+};
+
+struct OFT_item OFT[CTABLE_SIZE*NR_TASKS];
 
 
 
 void init_devices();
 inline int pathlen_isOK(const char *path);
-inline int getFile(char *name);
+inline struct logic_device* getFile(char *name);
 inline int getFreeChannel(struct channel *channels);
-inline int getFreeOFTpos();
+inline struct OFT_item* getNewOpenedFile();
 int sys_write_console(int *pos, const char *buffer,int size);
 int sys_read_keyboard(int *pos, char *buffer, int size);
 

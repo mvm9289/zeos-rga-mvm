@@ -253,6 +253,8 @@ void keyboard_routine() {
         else {
             printk_xy(X_KEY, Y_KEY, "      \0");
             printc_xy(X_KEY + 6, Y_KEY, ch);
+
+            /* Keyboard device */
         }
     }
 }

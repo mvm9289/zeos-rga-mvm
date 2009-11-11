@@ -12,12 +12,12 @@
 #include <string.h>
 
 int comprova_fd(int fd, int operacio) {
-    int acces_mode;
+    int access_mode;
 
+    if(fd < 0 || fd > CTABLE_SIZE) return -EBADF;
     if(current()->channel_table[fd].free) return -EBADF;
-
-    acces_mode = OFT[current()->channel_table[fd].OFT_indx].init_acces_mode;
-    if(operacio != acces_mode && acces_mode != O_RDWR) return -EINVAL;
+    access_mode = current()->channel_table[fd].opened_file->init_access_mode;
+    if(operacio != access_mode && access_mode != O_RDWR) return -EBADF;
 
     return 0;
 }
@@ -27,82 +27,76 @@ int sys_ni_syscall() {
 }
 
 int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT
-	int entry;
+	struct logic_device *file;
     int fd;
-    int OFT_indx;
+    struct OFT_item *new_opened_file;
 
     if(!access_ok(READ, path, FILE_NAME_SIZE)) return -EFAULT;
 
     if(!pathlen_isOK(path)) return -ENAMETOOLONG; //NO ME GUSTA!!!
 
-	OFT_indx = getFreeOFTpos();
-    if(OFT_indx == -1) return -ENFILE;
+	new_opened_file = getNewOpenedFile();
+    if(!new_opened_file) return -ENFILE;
 	
 	fd = getFreeChannel(current()->channel_table);
 	if(fd == -1) return -EMFILE;
 
-    entry = getFile(path);
-	if(entry == -1) return -ENOENT;
+    file = getFile(path);
+	if(!file) return -ENOENT;
 
     if(flags < O_RDONLY || flags > O_RDWR) return -EINVAL;
 
-	if (flags != DIR[entry].acces_mode && DIR[entry].acces_mode != O_RDWR) return -EACCES;
+	if (flags != file->access_mode && file->access_mode != O_RDWR) return -EACCES;
 
-	OFT[OFT_indx].num_refs++;
-	OFT[OFT_indx].seq_pos = 0;
-	OFT[OFT_indx].init_acces_mode = flags;
+	new_opened_file->num_refs++;
+	new_opened_file->seq_pos = 0;
+	new_opened_file->init_access_mode = flags;
 
 	current()->channel_table[fd].free = 0;
-	current()->channel_table[fd].log_device = &DIR[entry];
-	current()->channel_table[fd].OFT_indx = OFT_indx;
+	current()->channel_table[fd].opened_file = new_opened_file;
 
 	return fd;
 }
 
 int sys_read(int fd, char *buffer, int size) { //TESTEAR
-    char readed[W_SIZE];
     int bytes=0;
-    int err = comprova_fd(fd, READ);
-    int indx_op;
-    int OFT_indx;
+    int err;
+    struct OFT_item *opened_file;
+    struct logic_device *file;
 
+    err = comprova_fd(fd, READ);
     if(err != 0) return err;
     if(size < 0) return -EINVAL;
     if(!access_ok(WRITE, buffer, size)) return -EFAULT;
 
-    indx_op = current()->channel_table[fd].log_device->ops_indx;
-    OFT_indx = current()->channel_table[fd].OFT_indx;
-    while (size > W_SIZE) {
-        bytes += file_operations[indx_op].sys_read_dep(&OFT[OFT_indx].seq_pos, readed, W_SIZE);
-        size -= W_SIZE;
-        copy_to_user(readed, buffer+bytes-W_SIZE, W_SIZE);
-    }
-    bytes += file_operations[indx_op].sys_read_dep(&OFT[OFT_indx].seq_pos, readed, size);
-    copy_to_user(readed, buffer+bytes-size, size);
+    opened_file = current()->channel_table[fd].opened_file;
+    file = opened_file->file;
+    bytes += file->ops->sys_read_dep(&opened_file->seq_pos, buffer, size);
 
     return bytes;
 }
 
-int sys_write(int fd, char *buffer, int size) {
+int sys_write(int fd, char *buffer, int size) { //TESTEAR CON O_CREAT
     char to_write[W_SIZE];
     int bytes=0;
-    int err = comprova_fd(fd, WRITE);
-    int indx_op;
-    int OFT_indx;
+    int err;
+    struct OFT_item *opened_file;
+    struct logic_device *file;
 
+    err = comprova_fd(fd, WRITE);
     if(err != 0) return err;
     if(size < 0) return -EINVAL;
     if(!access_ok(READ, buffer, size)) return -EFAULT;
 
-    indx_op = current()->channel_table[fd].log_device->ops_indx;
-    OFT_indx = current()->channel_table[fd].OFT_indx;
+    opened_file = current()->channel_table[fd].opened_file;
+    file = opened_file->file;
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += file_operations[indx_op].sys_write_dep(&OFT[OFT_indx].seq_pos, to_write, W_SIZE);
+        bytes += file->ops->sys_write_dep(&opened_file->seq_pos, to_write, W_SIZE);
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += file_operations[indx_op].sys_write_dep(&OFT[OFT_indx].seq_pos, to_write, size);
+    bytes += file->ops->sys_write_dep(&opened_file->seq_pos, to_write, size);
 
     return bytes;
 }
@@ -116,10 +110,9 @@ int sys_dup (int fd) { //TESTEAR CON O_CREAT
 	if(dup_fd == -1) return -EMFILE;
 
     current()->channel_table[dup_fd].free = 0;
-	current()->channel_table[dup_fd].log_device = current()->channel_table[fd].log_device;
-    current()->channel_table[dup_fd].OFT_indx = current()->channel_table[fd].OFT_indx;
+    current()->channel_table[dup_fd].opened_file = current()->channel_table[fd].opened_file;
 
-	OFT[current()->channel_table[fd].OFT_indx].num_refs++;
+	current()->channel_table[dup_fd].opened_file->num_refs++;
 
 	return dup_fd;
 }	
@@ -129,7 +122,7 @@ int sys_close (int fd) {
 	if(current()->channel_table[fd].free) return -EBADF;
 
 	current()->channel_table[fd].free = 1;
-	OFT[current()->channel_table[fd].OFT_indx].num_refs--;
+	current()->channel_table[fd].opened_file->num_refs--;
 
 	return 0;
 }
@@ -192,8 +185,10 @@ int sys_fork(void) {
     /* Child Channel Table */
     for(i=0; i<CTABLE_SIZE; i++) {
         if(!task[tsk].t.task.channel_table[i].free)
-            OFT[task[tsk].t.task.channel_table[i].OFT_indx].num_refs++;
+            task[tsk].t.task.channel_table[i].opened_file->num_refs++;
     }
+    /* Child request chars */
+    task[tsk].t.task.request_chars_to_keyboard=0;
 
     /* Insert child in RUNQUEUE */
     list_add_tail(&task[tsk].t.task.rq_list, &runqueue);

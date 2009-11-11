@@ -47,6 +47,8 @@ struct task_struct {
 
     struct channel channel_table[CTABLE_SIZE];
 
+    unsigned long request_chars_to_keyboard;
+
     struct list_head rq_list;
 
     unsigned long allocation;
