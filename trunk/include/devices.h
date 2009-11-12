@@ -4,10 +4,7 @@
 #define FILE_NAME_SIZE 10
 #define DIR_ENTRIES 10
 #define CTABLE_SIZE 10
-
-#define O_RDONLY 1
-#define O_WRONLY 2
-#define O_RDWR 3
+#define OFT_MAX_SIZE 50
 
 struct file_operations {
     int (*sys_read_dep)(int *, char *, int);
@@ -38,7 +35,7 @@ struct OFT_item {
     struct logic_device *file;
 };
 
-struct OFT_item OFT[CTABLE_SIZE*NR_TASKS];
+struct OFT_item OFT[OFT_MAX_SIZE];
 
 
 

@@ -6,6 +6,7 @@
 #include <list.h>
 #include <mm.h>
 #include <devices.h>
+#include <openmodes.h>
 
 unsigned int set_eoi=0;
 unsigned long next_child_pid=0;

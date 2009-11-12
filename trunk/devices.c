@@ -1,8 +1,10 @@
 
 #include <devices.h>
+#include <openmodes.h>
 #include <io.h>
 #include <string.h>
 #include <keyboard.h>
+#include <list.h>
 
 void init_devices() {
     int i;
@@ -74,11 +76,25 @@ int sys_write_console (int *pos, const char *buffer, int size) {
 
 int sys_read_keyboard (int *pos, char *buffer, int size) {
     int i;
+    union task_union *t;
 
-    if(!list_is_last(keyboardqueue.next, &keyboardqueue) ||
-      buff_size < size) {
+    if(!list_empty(&keyboardqueue) || buff_size < size) {
+        /* Update Current Task Struct */
+        t=(union task_union *)current();
+        t->task.request_chars_to_keyboard = size;
+        t->task.buff_location=buffer;
+        t->stack[KERNEL_STACK_SIZE-10]=size;
+        
+        /* Block Current Process */
         list_del(&(current()->rq_list));
         list_add_tail(&(current()->rq_list), &keyboardqueue);
+
+        /* Select New Process to Run */
+        t=(union task_union *) list_head_to_task_struct(runqueue.next);
+        life=t->task.quantum;
+        t->task.nbtrans++;
+        t->task.remaining_life=life;
+        task_switch(t);
     }
     else
         for(i=0; i<size; i++)

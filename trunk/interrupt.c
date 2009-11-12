@@ -10,6 +10,9 @@
 #include <string.h>
 #include <sched.h>
 #include <sys.h>
+#include <keyboard.h>
+#include <mm.h>
+#include <list.h>
 
 #define KERNEL_LEVEL 0
 #define USER_LEVEL 3
@@ -244,6 +247,13 @@ void keyboard_routine() {
     char key=inb(0x60);
     int cr;
     char ch;
+    unsigned long chars_to_copy;
+    unsigned long log_pag_init;
+    unsigned long log_pag_end;
+    unsigned long num_pag_log;
+    struct task_struct *t;
+    char *buff_dest;
+    int i;
 
     if(!(key & 0x80)) {
         cr = (key & 0x7F);
@@ -253,8 +263,45 @@ void keyboard_routine() {
         else {
             printk_xy(X_KEY, Y_KEY, "      \0");
             printc_xy(X_KEY + 6, Y_KEY, ch);
+        }
 
-            /* Keyboard device */
+        /* Keyboard device */
+        if(buff_size < KEYBUFF_SIZE) buff_keyboard_insert(ch);
+        if(!list_empty(&keyboardqueue)) {
+            t = list_head_to_task_struct(keyboardqueue.next);
+            if(buff_size >= t->request_chars_to_keyboard || buff_size == KEYBUFF_SIZE) {
+                chars_to_copy = t->request_chars_to_keyboard;
+                if(chars_to_copy > buff_size) chars_to_copy = buff_size;
+
+                /* Reserve AUX Logic Pages to Request Process */
+                log_pag_init = NUM_PAGE_ADDR((unsigned long)(t->buff_location));
+                log_pag_end = NUM_PAGE_ADDR(((unsigned long)(t->buff_location) + chars_to_copy));
+                num_pag_log = log_pag_end - log_pag_init + 1;
+                for(i=0; i<num_pag_log; i++) {
+                    set_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i,
+                        t->phys_frames[log_pag_init - PAG_LOG_INIT_DATA_P0 + i]);
+                }
+
+                /* Copy Data from keyboard_buffer to User Memory of Request Process */
+                buff_dest = (char *)(((PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA)<<12) |
+                    ((unsigned long)(t->buff_location) & 0x0FFF));
+                for(i=0; i<chars_to_copy; i++) buff_dest[i] = buff_keyboard_get_next();
+
+                /* Delete AUX Logic Pages */
+                for(i=0; i<num_pag_log; i++) del_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i);
+                set_cr3(); //Flush TLB
+
+                /* Update task_struct of Request Process and Unblock it if necessary */
+                t->request_chars_to_keyboard -= chars_to_copy;
+                if(t->request_chars_to_keyboard == 0) {
+                    list_del(&(t->rq_list));
+                    list_add_tail(&(t->rq_list), &runqueue);
+                }
+                else t->buff_location += chars_to_copy;
+
+                /* If keyboard_buffer was full then insert the new char */
+                if(chars_to_copy == KEYBUFF_SIZE) buff_keyboard_insert(ch);
+            }
         }
     }
 }
