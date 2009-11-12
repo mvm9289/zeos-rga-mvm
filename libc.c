@@ -5,6 +5,7 @@
 #include <libc.h>
 #include <string.h>
 #include <stats.h>
+#include <openmodes.h>
 
 int errno;
 

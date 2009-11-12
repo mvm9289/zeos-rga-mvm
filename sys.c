@@ -3,6 +3,7 @@
  */
 #include <sys.h>
 #include <devices.h>
+#include <openmodes.h>
 #include <utils.h>
 #include <errno.h>
 #include <sched.h>
@@ -64,6 +65,7 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
     struct OFT_item *opened_file;
     struct logic_device *file;
 
+    if(current()->Pid == 0) return -1; // ERROR??
     err = comprova_fd(fd, READ);
     if(err != 0) return err;
     if(size < 0) return -EINVAL;
