@@ -226,7 +226,7 @@ ENTRY(sys_call_table)
 .long sys_ni_syscall
 .long sys_ni_syscall
 .long sys_ni_syscall
-.long sys_ni_syscall // 10
+.long sys_unlink // 10
 .long sys_ni_syscall
 .long sys_ni_syscall
 .long sys_ni_syscall

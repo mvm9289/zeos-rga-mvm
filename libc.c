@@ -244,7 +244,21 @@ int close(int fd) {
 }
 
 int unlink(const char *path) {
-    return 0;
+    int res=0;
+    __asm__ __volatile (
+    "pushl %%ebx\n"
+    "movl 8(%%ebp), %%ebx\n"
+    "movl $10, %%eax\n"
+    "int $0x80\n"
+    "movl %%eax, %0\n"
+    "popl %%ebx": "=g" (res) );
+
+    if(res < 0) {
+        errno = -res;
+        res = -1;
+    }
+
+    return res;
 }
 
 int getpid (void) {
