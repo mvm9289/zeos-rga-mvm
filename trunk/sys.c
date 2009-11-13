@@ -34,7 +34,7 @@ int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT
 
     if(!access_ok(READ, path, FILE_NAME_SIZE)) return -EFAULT;
 
-    if(!pathlen_isOK(path)) return -ENAMETOOLONG; //NO ME GUSTA!!!
+    if(!pathlen_isOK(path)) return -ENAMETOOLONG;
 
 	new_opened_file = getNewOpenedFile();
     if(!new_opened_file) return -ENFILE;
@@ -42,10 +42,15 @@ int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT
 	fd = getFreeChannel(current()->channel_table);
 	if(fd == -1) return -EMFILE;
 
-    file = getFile(path);
-	if(!file) return -ENOENT;
+    file = searchFile(path);
+	if(!file) {
+        if(flags < O_CREAT) return -ENOENT;
+        
+        file = createFile(path);
+        if(!file) return -1; // QUE ERROR?
+    }
 
-    if(flags < O_RDONLY || flags > O_RDWR) return -EINVAL;
+    if(flags & 0xF0) return -EINVAL;
 
 	if (flags != file->access_mode && file->access_mode != O_RDWR) return -EACCES;
 
@@ -120,13 +125,21 @@ int sys_dup (int fd) { //TESTEAR CON O_CREAT
 }	
 
 int sys_close (int fd) {
-    if(fd < 0 || fd > CTABLE_SIZE) return -EBADF;
-	if(current()->channel_table[fd].free) return -EBADF;
+    struct channel *ch;
 
-	current()->channel_table[fd].free = 1;
-	current()->channel_table[fd].opened_file->num_refs--;
+    ch = &current()->channel_table[fd];
+    if(fd < 0 || fd > CTABLE_SIZE) return -EBADF;
+	if(ch->free) return -EBADF;
+
+	ch->free = 1;
+	ch->opened_file->num_refs--;
+    if(ch->opened_file->file->ops->sys_release_dep != NULL)
+        ch->opened_file->file->ops->sys_release_dep(ch->opened_file->file);
 
 	return 0;
+}
+
+int sys_unlink(const char *path) {
 }
 
 int sys_getpid(void) {

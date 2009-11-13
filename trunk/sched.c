@@ -75,14 +75,17 @@ void init_task0(void) {
     OFT[0].seq_pos=0;
     OFT[0].init_access_mode=O_RDONLY;
     OFT[0].file = &DIR[0];
+    DIR[0].nb_refs++;
     OFT[1].num_refs=1;
     OFT[1].seq_pos=0;
     OFT[1].init_access_mode=O_WRONLY;
-    OFT[1].file = &DIR[1];
+    OFT[1].file = &DIR[1];///////////////////////MIRAR DE HACER CON OPENS
+    DIR[1].nb_refs++;
     OFT[2].num_refs=1;
     OFT[2].seq_pos=0;
     OFT[2].init_access_mode=O_WRONLY;
-    OFT[2].file = &DIR[2];
+    OFT[2].file = &DIR[1];
+    DIR[1].nb_refs++;
 
     /* Mark this task is allocate */
     task[0].t.task.allocation=ALLOC;
