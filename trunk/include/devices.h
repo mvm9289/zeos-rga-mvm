@@ -6,11 +6,12 @@
 #define CTABLE_SIZE 10
 #define OFT_MAX_SIZE 50
 
-struct logic_device {
+struct logic_device {  // algun tipo de indice para saber cual es el primer bloque (en caso de fichero)
     char name[FILE_NAME_SIZE];
     int free;
     int nb_refs;
     int access_mode;
+	int firstBlock;
     struct file_operations *ops;
 };
 
@@ -47,6 +48,7 @@ struct OFT_item OFT[OFT_MAX_SIZE];
 void init_devices();
 inline int pathlen_isOK(const char *path);
 inline struct logic_device* searchFile(char *name);
+inline struct logic_device* createFile(char *name, int flags);
 inline int getFreeChannel(struct channel *channels);
 inline struct OFT_item* getNewOpenedFile();
 int sys_open_console(const char *path, int flags);

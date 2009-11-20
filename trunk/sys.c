@@ -27,7 +27,7 @@ int sys_ni_syscall() {
     return -ENOSYS;
 }
 
-int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT
+int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT   +     sys_open_dependiente??? cuando? quien?
 	struct logic_device *file;
     int fd;
     struct OFT_item *new_opened_file;
@@ -35,6 +35,8 @@ int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT
     if(!access_ok(READ, path, FILE_NAME_SIZE)) return -EFAULT;
 
     if(!pathlen_isOK(path)) return -ENAMETOOLONG;
+
+	if((!flags & 0x03) || (flags & 0xF0)) return -EINVAL;  // ha de haber algun modo de apertura, ya sea RD, WR o RDWR a parte de no ser mayor que O_EXCL
 
 	new_opened_file = getNewOpenedFile();
     if(!new_opened_file) return -ENFILE;
@@ -46,17 +48,17 @@ int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT
 	if(!file) {
         if(flags < O_CREAT) return -ENOENT;
         
-        file = createFile(path);
+        file = createFile(path,flags&0x03);
         if(!file) return -1; // QUE ERROR?
     }
+	else if(flags & 0x0C) return -EEXIST; /* File exists */
 
-    if(flags & 0xF0) return -EINVAL;
-
-	if (flags != file->access_mode && file->access_mode != O_RDWR) return -EACCES;
+	if (flags != file->access_mode && file->access_mode != O_RDWR) return -EACCES;   // flags & 0x03?
 
 	new_opened_file->num_refs++;
 	new_opened_file->seq_pos = 0;
-	new_opened_file->init_access_mode = flags;
+	new_opened_file->init_access_mode = flags;  // flags & 0x03?
+	new_opened_file->file = file;
 
 	current()->channel_table[fd].free = 0;
 	current()->channel_table[fd].opened_file = new_opened_file;
@@ -70,7 +72,7 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
     struct OFT_item *opened_file;
     struct logic_device *file;
 
-    if(current()->Pid == 0) return -1; // ERROR??
+    if(current()->Pid == 0) return -1; // ERROR??   ---> EPERM		 1	/* Operation not permitted */ ??
     err = comprova_fd(fd, READ);
     if(err != 0) return err;
     if(size < 0) return -EINVAL;
@@ -140,6 +142,20 @@ int sys_close (int fd) {
 }
 
 int sys_unlink(const char *path) {
+	int res;
+    struct logic_device *file;
+
+    if(!access_ok(READ, path, FILE_NAME_SIZE)) return -EFAULT;
+    if(!pathlen_isOK(path)) return -ENOENT; // si es mas largo que 10 seguro que no está y no me meto a buscarlo
+
+    file = searchFile(path);
+
+    if(file == NULL) return -ENOENT;
+    if(file->nb_refs > 0) return -EACCES; // o esta? ->  -ETXTBSY    /* Text file busy */
+
+    res = file->ops->sys_unlink_dep(file);
+
+    return res;
 }
 
 int sys_getpid(void) {

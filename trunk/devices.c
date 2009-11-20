@@ -5,6 +5,7 @@
 #include <string.h>
 #include <keyboard.h>
 #include <list.h>
+#include <filesystem.h>
 
 void init_devices() { //MIRAR DE HACER CON OPENS
     int i;
@@ -55,6 +56,38 @@ inline struct logic_device* searchFile(char *name) {
 
 	return NULL;
 }	
+
+inline struct logic_device* createFile(char *name, int flags)
+{
+	int i;
+	
+	for(i = 0; i < DIR_ENTRIES; ++i)
+	{
+		if(DIR[i].free)
+		{
+			DIR[i].free = 0;
+			DIR[i].nb_refs = 0;
+			DIR[i].access_mode = flags; // flags&0x03 del open o O_RDWR como en prosofib?
+			strcpy(DIR[i].name, name);
+			if(free_block != -1)
+			{
+				DIR[i].firstBlock = free_block;
+				free_block = ZeOSFAT[free_block];
+				ZeOSFAT[free_block] = EOF;
+			}else return NULL; // se debería diferenciar entre el return de abajo y este...
+			file_ops[i].sys_open_dep = sys_open_file; // ??
+			file_ops[i].sys_read_dep = sys_read_file;
+			file_ops[i].sys_write_dep = sys_write_file; // compilador -> devices.c:80: aviso: asignación desde un tipo de puntero incompatible
+			file_ops[i].sys_release_dep = sys_release_std;
+			file_ops[i].sys_unlink_dep = sys_unlink_file;
+			DIR[i].ops = &file_ops[i];
+			return &DIR[i];
+		}
+	}
+	
+	return NULL;
+}			
+
 
 inline int getFreeChannel(struct channel *channels) {
 	int i;
