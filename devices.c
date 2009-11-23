@@ -171,11 +171,12 @@ int sys_read_file(int fd, char *buffer, int size)
 	struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
 	int nblock = OFTfile->seq_pos / BLOCK_SIZE;
 	int blockPos = OFTfile->seq_pos % BLOCK_SIZE;
+	int block = OFTfile->file->firstBlock;
+	int i;
+    int bytes = 0;
 
 	if((OFTfile->seq_pos + size) > OFTfile->file->size) return -1; // MIRAR ERROR
 
-	int i;
-	int block = OFTfile->file->firstBlock;
 	for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
 
 	for(i = 0; i < size; ++i)
@@ -183,13 +184,15 @@ int sys_read_file(int fd, char *buffer, int size)
 		buffer[i] = HardDisk[block][blockPos];
 		++blockPos;
 		++OFTfile->seq_pos;		
-
+        ++bytes;           
+ 
 		if(blockPos == 256)
 		{
 			blockPos = 0;
 			block = ZeOSFAT[block];
 		}
-	}				
+	}
+    return bytes;				
 }
 
 int sys_write_file(int fd, char *buffer, int size) 
@@ -197,9 +200,10 @@ int sys_write_file(int fd, char *buffer, int size)
 	struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
 	int nblock = OFTfile->seq_pos / BLOCK_SIZE;
 	int blockPos = OFTfile->seq_pos % BLOCK_SIZE;
-		
 	int i;
+    int bytes = 0;
 	int block = OFTfile->file->firstBlock;
+
 	for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
 
 	for(i = 0; i < size; ++i)  //se puede hacer con strcpy iendo con cuidado?
@@ -207,15 +211,17 @@ int sys_write_file(int fd, char *buffer, int size)
 		HardDisk[block][blockPos] = buffer[i];
 		++blockPos;
 		++OFTfile->seq_pos;
-		++size;		
+        if(OFTfile->seq_pos > OFTfile->file->size) ++OFTfile->file->size; // MIRAR BIEN
+        ++bytes;		
 
 		if(blockPos == 256) // y si ya tenía reservado ese espacio??
 		{
 			block = getFreeBlock(block);
-			if(block == -1) return -ENOSPC; // mirar error
+			if(block == -1) return -1; // mirar error
 			blockPos = 0;
 		}
-	}		 
+	}
+    return bytes;		 
 }
 
 int sys_unlink_file(struct logic_device *file) {

@@ -71,6 +71,7 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
     int err;
     struct OFT_item *opened_file;
     struct logic_device *file;
+    char buff[size];
 
     if(current()->Pid == 0) return -1; // ERROR?? ---> EPERM /* Operation not permitted */ ??
     err = comprova_fd(fd, READ);
@@ -80,7 +81,11 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
 
     opened_file = current()->channel_table[fd].opened_file;
     file = opened_file->file;
-    bytes += file->ops->sys_read_dep(&opened_file->seq_pos, buffer, size); /* yo creo que sería mejor tener nuestro buffer particular de esta función y al final hacer un copy to user a la direccion buffer */
+    bytes += file->ops->sys_read_dep(fd, buff, size); 
+
+/* yo creo que sería mejor tener nuestro buffer particular de esta función y al final hacer un copy to user a la direccion buffer */
+
+    copy_to_user(&buff[0],buffer,bytes);
 
     return bytes;
 }
@@ -101,11 +106,13 @@ int sys_write(int fd, char *buffer, int size) { //TESTEAR CON O_CREAT
     file = opened_file->file;
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += file->ops->sys_write_dep(fd, to_write, W_SIZE);
+        if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) != -1)  // otra variable? seguro que Marisa se queja si lo hacemos asi
+            bytes += err;
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += file->ops->sys_write_dep(fd, to_write, size);
+    if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) != -1)
+        bytes += err;
 
     return bytes;
 }
