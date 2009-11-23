@@ -27,8 +27,8 @@ int sys_ni_syscall() {
     return -ENOSYS;
 }
 
-int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT   +     sys_open_dependiente??? cuando? quien?
-	struct logic_device *file;
+int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT + sys_open_dependiente??? cuando?quien?
+    struct logic_device *file;
     int fd;
     struct OFT_item *new_opened_file;
 
@@ -72,7 +72,7 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
     struct OFT_item *opened_file;
     struct logic_device *file;
 
-    if(current()->Pid == 0) return -1; // ERROR??   ---> EPERM		 1	/* Operation not permitted */ ??
+    if(current()->Pid == 0) return -1; // ERROR?? ---> EPERM /* Operation not permitted */ ??
     err = comprova_fd(fd, READ);
     if(err != 0) return err;
     if(size < 0) return -EINVAL;
@@ -80,7 +80,7 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
 
     opened_file = current()->channel_table[fd].opened_file;
     file = opened_file->file;
-    bytes += file->ops->sys_read_dep(&opened_file->seq_pos, buffer, size);
+    bytes += file->ops->sys_read_dep(&opened_file->seq_pos, buffer, size); /* yo creo que sería mejor tener nuestro buffer particular de esta función y al final hacer un copy to user a la direccion buffer */
 
     return bytes;
 }
@@ -101,11 +101,11 @@ int sys_write(int fd, char *buffer, int size) { //TESTEAR CON O_CREAT
     file = opened_file->file;
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        bytes += file->ops->sys_write_dep(&opened_file->seq_pos, to_write, W_SIZE);
+        bytes += file->ops->sys_write_dep(fd, to_write, W_SIZE);
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    bytes += file->ops->sys_write_dep(&opened_file->seq_pos, to_write, size);
+    bytes += file->ops->sys_write_dep(fd, to_write, size);
 
     return bytes;
 }
