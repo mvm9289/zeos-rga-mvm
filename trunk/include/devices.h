@@ -12,7 +12,7 @@ struct logic_device {  // algun tipo de indice para saber cual es el primer bloq
     int nb_refs;
     int access_mode;
     int firstBlock;
-	int size; // tamaño del fichero (para el read)
+    int size; // tamaño del fichero (para el read)
     struct file_operations *ops;
 };
 
