@@ -49,18 +49,15 @@ struct OFT_item OFT[OFT_MAX_SIZE];
 void init_devices();
 inline int pathlen_isOK(const char *path);
 inline struct logic_device* searchFile(char *name);
-inline struct logic_device* createFile(char *name, int flags);
+inline struct logic_device* createFile(char *name);
 inline int getFreeChannel(struct channel *channels);
 inline struct OFT_item* getNewOpenedFile();
-int sys_open_console(const char *path, int flags);
 int sys_write_console(int *pos, const char *buffer,int size);
-int sys_open_keyboard(const char *path, int flags);
 int sys_read_keyboard(int *pos, char *buffer, int size);
-int sys_unlink_dev (struct logic_device *file);
 int sys_open_file(const char *path, int flags);
 int sys_read_file(int fd, char *buffer, int size);
 int sys_write_file(int fd, char *buffer, int size);
 int sys_unlink_file(struct logic_device *file);
-int sys_release_std(struct logic_device *file);
+int sys_release_file(struct logic_device *file);
 
 #endif /* DEVICES_H__*/

@@ -36,7 +36,7 @@ int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT + sys_open_dependie
 
     if(!pathlen_isOK(path)) return -ENAMETOOLONG;
 
-	if((!flags & 0x03) || (flags & 0xF0)) return -EINVAL;  // ha de haber algun modo de apertura, ya sea RD, WR o RDWR a parte de no ser mayor que O_EXCL
+	if(!(flags & 0x03) || (flags & 0xF0)) return -EINVAL;  // ha de haber algun modo de apertura, ya sea RD, WR o RDWR a parte de no ser mayor que O_EXCL
 
 	new_opened_file = getNewOpenedFile();
     if(!new_opened_file) return -ENFILE;
@@ -48,16 +48,20 @@ int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT + sys_open_dependie
 	if(!file) {
         if(flags < O_CREAT) return -ENOENT;
         
-        file = createFile(path,flags&0x03);
-        if(!file) return -1; // QUE ERROR?
+        //if(free_blocks) (error no espacio en disco)
+
+        file = createFile(path);
+        if(!file) return -1; // QUE ERROR? (no espacio en dir)
     }
 	else if(flags & 0x0C) return -EEXIST; /* File exists */
 
-	if (flags != file->access_mode && file->access_mode != O_RDWR) return -EACCES;   // flags & 0x03?
+    flags &= 0x03;
+
+	if (flags != file->access_mode && file->access_mode != O_RDWR) return -EACCES;
 
 	new_opened_file->num_refs++;
 	new_opened_file->seq_pos = 0;
-	new_opened_file->init_access_mode = flags;  // flags & 0x03?
+	new_opened_file->init_access_mode = flags;
 	new_opened_file->file = file;
 
 	current()->channel_table[fd].free = 0;
@@ -71,7 +75,6 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
     int err;
     struct OFT_item *opened_file;
     struct logic_device *file;
-    char buff[size];
 
     if(current()->Pid == 0) return -1; // ERROR?? ---> EPERM /* Operation not permitted */ ??
     err = comprova_fd(fd, READ);
@@ -81,11 +84,7 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
 
     opened_file = current()->channel_table[fd].opened_file;
     file = opened_file->file;
-    bytes += file->ops->sys_read_dep(fd, buff, size); 
-
-/* yo creo que sería mejor tener nuestro buffer particular de esta función y al final hacer un copy to user a la direccion buffer */
-
-    copy_to_user(&buff[0],buffer,bytes);
+    bytes += file->ops->sys_read_dep(fd, buffer, size);
 
     return bytes;
 }
@@ -106,13 +105,15 @@ int sys_write(int fd, char *buffer, int size) { //TESTEAR CON O_CREAT
     file = opened_file->file;
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) != -1)  // otra variable? seguro que Marisa se queja si lo hacemos asi
+        if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) != -1)
             bytes += err;
+        else return -1; //ERROR???
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
     if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) != -1)
         bytes += err;
+    else return -1; //ERROR???
 
     return bytes;
 }
