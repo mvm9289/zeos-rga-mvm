@@ -19,8 +19,8 @@ struct logic_device {  // algun tipo de indice para saber cual es el primer bloq
 struct logic_device DIR[DIR_ENTRIES];
 
 struct file_operations {
-    int (*sys_open_dep) (const char *, int);
-    int (*sys_read_dep)(int, char *, int);
+    int (*sys_open_dep) (struct logic_device *);
+    int (*sys_read_dep)(int, char *, int); //MIRAR LO DEL FD
     int (*sys_write_dep)(int, const char *, int);
     int (*sys_release_dep)(struct logic_device *);
     int (*sys_unlink_dep)(struct logic_device *);
@@ -48,15 +48,15 @@ struct OFT_item OFT[OFT_MAX_SIZE];
 
 void init_devices();
 inline int pathlen_isOK(const char *path);
-inline struct logic_device* searchFile(char *name);
-inline struct logic_device* createFile(char *name);
+inline struct logic_device* searchFile(const char *name);
+inline struct logic_device* createFile(const char *name);
 inline int getFreeChannel(struct channel *channels);
 inline struct OFT_item* getNewOpenedFile();
-int sys_write_console(int *pos, const char *buffer,int size);
-int sys_read_keyboard(int *pos, char *buffer, int size);
-int sys_open_file(const char *path, int flags);
+int sys_write_console(int fd, const char *buffer,int size);
+int sys_read_keyboard(int fd, char *buffer, int size);
+int sys_open_file(struct logic_device *file);
 int sys_read_file(int fd, char *buffer, int size);
-int sys_write_file(int fd, char *buffer, int size);
+int sys_write_file(int fd, const char *buffer, int size);
 int sys_unlink_file(struct logic_device *file);
 int sys_release_file(struct logic_device *file);
 

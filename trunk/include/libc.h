@@ -8,6 +8,7 @@
 
 #include <stats.h>
 #include <string.h>
+#include <openmodes.h>
 
 /* ERRNO */
 #include <errno.h>

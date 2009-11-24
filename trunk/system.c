@@ -12,6 +12,7 @@
 #include <io.h>
 #include <utils.h>
 #include <devices.h>
+#include <filesystem.h>
 
 
 int (*usr_main)(void) = (void *) PH_USER_START;
@@ -73,6 +74,9 @@ main(void) {
 
     /* Initialize Memory */
     init_mm();
+
+    /* Initialize ZeOSFat */
+    initZeOSFat();
 
     /* Initialize Devices */
     init_devices();
