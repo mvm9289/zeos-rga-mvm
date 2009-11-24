@@ -16,6 +16,7 @@ void init_devices() { //MIRAR DE HACER CON OPENS
     DIR[0].free = 0; // faltaba no?
     DIR[0].nb_refs = 0;
     DIR[0].access_mode = O_RDONLY;
+    DIR[0].firstBlock = NON_BLOCK;
     file_ops[0].sys_open_dep = NULL;
     file_ops[0].sys_read_dep = sys_read_keyboard;  // warning pk no cuadran los parámetros
     file_ops[0].sys_write_dep = NULL;
@@ -28,6 +29,7 @@ void init_devices() { //MIRAR DE HACER CON OPENS
     DIR[1].free = 0;
     DIR[1].nb_refs = 0;
     DIR[1].access_mode = O_WRONLY;
+    DIR[1].firstBlock = NON_BLOCK;
     file_ops[1].sys_open_dep = NULL;
     file_ops[1].sys_read_dep = NULL;
     file_ops[1].sys_write_dep = sys_write_console; // warning pk no cuadran los parámetros
@@ -51,7 +53,7 @@ inline int pathlen_isOK(const char *path) {
     return 1;
 }
 
-inline struct logic_device* searchFile(char *name) {
+inline struct logic_device* searchFile(const char *name) {
 	int i;
 
 	for(i = 0; i < DIR_ENTRIES; ++i)
@@ -60,7 +62,7 @@ inline struct logic_device* searchFile(char *name) {
 	return NULL;
 }	
 
-inline struct logic_device* createFile(char *name)
+inline struct logic_device* createFile(const char *name)
 {
 	int i;
 	
@@ -108,7 +110,7 @@ inline struct OFT_item* getNewOpenedFile() {
 	return NULL;
 }
 
-int sys_write_console (int *pos, const char *buffer, int size) {
+int sys_write_console (int fd, const char *buffer, int size) {
     int i;
     for(i=0; i<size; i++)
         printc(buffer[i]);
@@ -116,7 +118,7 @@ int sys_write_console (int *pos, const char *buffer, int size) {
     return i;
 }
 
-int sys_read_keyboard (int *pos, char *buffer, int size) {
+int sys_read_keyboard (int fd, char *buffer, int size) {
     int i;
     union task_union *t;
 
@@ -145,13 +147,15 @@ int sys_read_keyboard (int *pos, char *buffer, int size) {
     return size;
 }
 
-int sys_open_file(const char *path, int flags) { // para que? quien? como?
+int sys_open_file(struct logic_device *file) { // para que? quien? como?
+    file->nb_refs++;
+//ERROR????
     return 0;
 }
 
 int sys_read_file(int fd, char *buffer, int size) 
 {
-	/*struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
+	struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
 	int nblock = OFTfile->seq_pos / BLOCK_SIZE;
 	int blockPos = OFTfile->seq_pos % BLOCK_SIZE;
 	int block = OFTfile->file->firstBlock;
@@ -175,18 +179,18 @@ int sys_read_file(int fd, char *buffer, int size)
 			block = ZeOSFAT[block];
 		}
 	}
-    return bytes;*/
-    return 0;		
+    return bytes;		
 }
 
-int sys_write_file(int fd, char *buffer, int size) 
+int sys_write_file(int fd, const char *buffer, int size) 
 {
-	/*struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
+	struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
 	int nblock = OFTfile->seq_pos / BLOCK_SIZE;
 	int blockPos = OFTfile->seq_pos % BLOCK_SIZE;
 	int i;
     int bytes = 0;
 	int block = OFTfile->file->firstBlock;
+    int newBlock;
 
 	for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
 
@@ -198,15 +202,20 @@ int sys_write_file(int fd, char *buffer, int size)
         if(OFTfile->seq_pos > OFTfile->file->size) ++OFTfile->file->size; // MIRAR BIEN
         ++bytes;		
 
-		if(blockPos == 256) // y si ya tenía reservado ese espacio??
+		if(blockPos == BLOCK_SIZE)
 		{
-			block = Alloc_Block(block);
-			if(block == -1) return -1; // mirar error
-			blockPos = 0;
+            if(ZeOSFAT[block] == EOF) {
+			    newBlock = Alloc_Block();
+			    if(newBlock == -1) return -1; // mirar error
+                ZeOSFAT[block] = newBlock;
+                ZeOSFAT[newBlock] = EOF;
+            }
+            else block = ZeOSFAT[block];
+			
+            blockPos = 0;
 		}
 	}
-    return bytes;*/
-    return 0; 
+    return bytes;
 }
 
 int sys_unlink_file(struct logic_device *file) {
@@ -215,6 +224,6 @@ int sys_unlink_file(struct logic_device *file) {
 
 int sys_release_file (struct logic_device *file) {
     file->nb_refs--;
-
+//ERROR nb_refs == 0
     return 0;
 }

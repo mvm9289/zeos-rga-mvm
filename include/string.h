@@ -7,9 +7,9 @@
 
 #include <types.h>
 
-int strlen(char *buffer);
-void strcpy(char *str1, char *str2);
-int strcmp (char *str1, char *str2);
+int strlen(const char *buffer);
+void strcpy(char *str1, const char *str2);
+int strcmp (const char *str1, const char *str2);
 void itoa(int num, char *buffer);
 
 #endif  /* __STRING_H__ */
