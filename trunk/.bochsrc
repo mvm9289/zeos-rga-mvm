@@ -721,5 +721,5 @@ usb1: enabled=1, ioaddr=0xFF80, irq=10
 #=======================================================================
 #newharddrivesupport: enabled=1
 
-gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+#gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
 

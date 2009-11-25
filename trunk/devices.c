@@ -8,12 +8,12 @@
 #include <filesystem.h>
 #include <errno.h>
 
-void init_devices() { //MIRAR DE HACER CON OPENS
+void init_devices() {
     int i;
 
     /* Initializes Keyboard */
     strcpy(DIR[0].name, "KEYBOARD");
-    DIR[0].free = 0; // faltaba no?
+    DIR[0].free = 0;
     DIR[0].nb_refs = 0;
     DIR[0].access_mode = O_RDONLY;
     DIR[0].firstBlock = NON_BLOCK;
@@ -37,7 +37,7 @@ void init_devices() { //MIRAR DE HACER CON OPENS
     file_ops[1].sys_unlink_dep = NULL;
     DIR[1].ops = &file_ops[1];
 
-    /* Initializes Opened Files Table */
+    /* Initializes Open Files Table */
     for(i=0; i<OFT_MAX_SIZE; i++)
 	    OFT[i].num_refs = 0;
 }
@@ -54,66 +54,64 @@ inline int pathlen_isOK(const char *path) {
 }
 
 inline struct logic_device* searchFile(const char *name) {
-	int i;
+    int i;
 
-	for(i = 0; i < DIR_ENTRIES; ++i)
-		if(!DIR[i].free && strcmp(name,DIR[i].name)) return &DIR[i];
+    for(i = 0; i < DIR_ENTRIES; ++i)
+        if(!DIR[i].free && strcmp(name,DIR[i].name)) return &DIR[i];
 
-	return NULL;
+    return NULL;
 }	
 
-inline struct logic_device* createFile(const char *name)
-{
-	int i;
-	
-	for(i = 0; i < DIR_ENTRIES; ++i)
-	{
-		if(DIR[i].free)
-		{
-			DIR[i].free = 0;
-			DIR[i].nb_refs = 0;
-			DIR[i].access_mode = O_RDWR;
-			DIR[i].size = 0;
-			strcpy(DIR[i].name, name);
-			DIR[i].firstBlock = free_block;
-			free_block = ZeOSFAT[free_block];
-			ZeOSFAT[DIR[i].firstBlock] = EOF;
-			file_ops[i].sys_open_dep = sys_open_file; // ??
-			file_ops[i].sys_read_dep = sys_read_file;
-			file_ops[i].sys_write_dep = sys_write_file;
-			file_ops[i].sys_release_dep = sys_release_file;
-			file_ops[i].sys_unlink_dep = sys_unlink_file;
-			DIR[i].ops = &file_ops[i];
-			return &DIR[i];
-		}
-	}
-	
-	return NULL;
+inline struct logic_device* createFile(const char *name) {
+    int i;
+
+    for(i = 0; i < DIR_ENTRIES; ++i) {
+        if(DIR[i].free) {
+            DIR[i].free = 0;
+            DIR[i].nb_refs = 0;
+            DIR[i].access_mode = O_RDWR;
+            DIR[i].size = 0;
+            strcpy(DIR[i].name, name);
+            DIR[i].firstBlock = free_block;
+            free_block = ZeOSFAT[free_block];
+            ZeOSFAT[DIR[i].firstBlock] = EOF;
+            file_ops[i].sys_open_dep = sys_open_file;
+            file_ops[i].sys_read_dep = sys_read_file;
+            file_ops[i].sys_write_dep = sys_write_file;
+            file_ops[i].sys_release_dep = sys_release_file;
+            file_ops[i].sys_unlink_dep = sys_unlink_file;
+            DIR[i].ops = &file_ops[i];
+
+            return &DIR[i];
+        }
+    }
+
+    return NULL;
 }			
 
 
 inline int getFreeChannel(struct channel *channels) {
-	int i;
+    int i;
 
-	for(i = 0; i < CTABLE_SIZE; ++i)
-		if(channels[i].free) return i;
+    for(i = 0; i < CTABLE_SIZE; ++i)
+        if(channels[i].free) return i;
 
-	return -1;
+    return -1;
 }
 
 inline struct OFT_item* getNewOpenedFile() {
-	int i;
+    int i;
 
-	for(i = 0; i < CTABLE_SIZE*NR_TASKS; ++i)
-		if(!OFT[i].num_refs) return &OFT[i];
+    for(i = 0; i < OFT_MAX_SIZE; ++i)
+        if(!OFT[i].num_refs) return &OFT[i];
 
-	return NULL;
+    return NULL;
 }
 
 int sys_write_console (int fd, const char *buffer, int size) {
     int i;
-    for(i=0; i<size; i++)
-        printc(buffer[i]);
+
+    for(i=0; i<size; i++) printc(buffer[i]);
 
     return i;
 }
@@ -122,7 +120,7 @@ int sys_read_keyboard (int fd, char *buffer, int size) {
     int i;
     union task_union *t;
 
-    if(current()->Pid == 0) return -EPERM; // esto iba aquí
+    if(current()->Pid == 0) return -EPERM;
 
     if(!list_empty(&keyboardqueue) || buff_size < size) {
         /* Update Current Task Struct */
@@ -149,14 +147,13 @@ int sys_read_keyboard (int fd, char *buffer, int size) {
     return size;
 }
 
-int sys_open_file(struct logic_device *file) { // para que? quien? como?
+int sys_open_file(struct logic_device *file) {
     file->nb_refs++;
-//ERROR????
+
     return 0;
 }
 
-int sys_read_file(int fd, char *buffer, int size) 
-{
+int sys_read_file(int fd, char *buffer, int size) {
 	struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
 	int nblock = OFTfile->seq_pos / BLOCK_SIZE;
 	int blockPos = OFTfile->seq_pos % BLOCK_SIZE;
@@ -164,73 +161,68 @@ int sys_read_file(int fd, char *buffer, int size)
 	int i;
     int bytes = 0;
 
-	//if((OFTfile->seq_pos + size) > OFTfile->file->size) return -1; // MIRAR ERROR
+    for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
 
-	for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
-
-	for(i = 0; (i < size) && (OFTfile->seq_pos < OFTfile->file->size); ++i)
-	{
-		buffer[i] = HardDisk[block][blockPos];
-		++blockPos;
-		++OFTfile->seq_pos;		
+    for(i = 0; (i < size) && (OFTfile->seq_pos < OFTfile->file->size); ++i) {
+        buffer[i] = HardDisk[block][blockPos];
+        ++blockPos;
+        ++OFTfile->seq_pos;		
         ++bytes;           
- 
-		if(blockPos == 256)
-		{
-			blockPos = 0;
-			block = ZeOSFAT[block];
-		}
-	}
+
+        if(blockPos == 256) {
+            blockPos = 0;
+            block = ZeOSFAT[block];
+        }
+    }
+
     return bytes;		
 }
 
-int sys_write_file(int fd, const char *buffer, int size) 
-{
-	struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
-	int nblock = OFTfile->seq_pos / BLOCK_SIZE;
-	int blockPos = OFTfile->seq_pos % BLOCK_SIZE;
-	int i;
+int sys_write_file(int fd, const char *buffer, int size) {
+    struct OFT_item *OFTfile = current()->channel_table[fd].opened_file;
+    int nblock = OFTfile->seq_pos / BLOCK_SIZE;
+    int blockPos = OFTfile->seq_pos % BLOCK_SIZE;
+    int i;
     int bytes = 0;
-	int block = OFTfile->file->firstBlock;
+    int block = OFTfile->file->firstBlock;
     int newBlock;
 
-	for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
+    for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
 
-	for(i = 0; i < size; ++i)  //se puede hacer con strcpy iendo con cuidado?
-	{
-		HardDisk[block][blockPos] = buffer[i];
-		++blockPos;
-		++OFTfile->seq_pos;
-        if(OFTfile->seq_pos > OFTfile->file->size) ++OFTfile->file->size; // MIRAR BIEN
+    for(i = 0; i < size; ++i) {//se puede hacer con strcpy iendo con cuidado?
+        HardDisk[block][blockPos] = buffer[i];
+        ++blockPos;
+        ++OFTfile->seq_pos;
+        if(OFTfile->seq_pos > OFTfile->file->size) ++OFTfile->file->size;
         ++bytes;		
 
-		if(blockPos == BLOCK_SIZE)
-		{
+        if(blockPos == BLOCK_SIZE) {
             if(ZeOSFAT[block] == EOF) {
-			    newBlock = Alloc_Block();
-			    if(newBlock == -1) return -ENOSPC; // mirar error
+                newBlock = Alloc_Block();
+                if(newBlock == -1) return -ENOSPC;
                 ZeOSFAT[block] = newBlock;
                 ZeOSFAT[newBlock] = EOF;
                 block = newBlock;
             }
             else block = ZeOSFAT[block];
-			
             blockPos = 0;
-		}
-	}
+        }
+    }
+
     return bytes;
 }
 
-int sys_unlink_file(struct logic_device *file) 
-{
+int sys_unlink_file(struct logic_device *file) {
+    if(file->nb_refs > 0) return -EBUSY;
+
     Free_Blocks(file->firstBlock);
     file->free = 1;
-//ERROR??
+
     return 0;
 }
 
 int sys_release_file (struct logic_device *file) {
     file->nb_refs--;
-//ERROR nb_refs == 0
+
     return 0;
 }

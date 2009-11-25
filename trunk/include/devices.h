@@ -19,8 +19,8 @@ struct logic_device {  // algun tipo de indice para saber cual es el primer bloq
 struct logic_device DIR[DIR_ENTRIES];
 
 struct file_operations {
-    int (*sys_open_dep) (struct logic_device *);
-    int (*sys_read_dep)(int, char *, int); //MIRAR LO DEL FD
+    int (*sys_open_dep)(struct logic_device *);
+    int (*sys_read_dep)(int, char *, int);
     int (*sys_write_dep)(int, const char *, int);
     int (*sys_release_dep)(struct logic_device *);
     int (*sys_unlink_dep)(struct logic_device *);
