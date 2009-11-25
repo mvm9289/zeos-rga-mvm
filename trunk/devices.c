@@ -18,7 +18,7 @@ void init_devices() { //MIRAR DE HACER CON OPENS
     DIR[0].access_mode = O_RDONLY;
     DIR[0].firstBlock = NON_BLOCK;
     file_ops[0].sys_open_dep = NULL;
-    file_ops[0].sys_read_dep = sys_read_keyboard;  // warning pk no cuadran los parámetros
+    file_ops[0].sys_read_dep = sys_read_keyboard;
     file_ops[0].sys_write_dep = NULL;
     file_ops[0].sys_release_dep = NULL;
     file_ops[0].sys_unlink_dep = NULL;
@@ -32,7 +32,7 @@ void init_devices() { //MIRAR DE HACER CON OPENS
     DIR[1].firstBlock = NON_BLOCK;
     file_ops[1].sys_open_dep = NULL;
     file_ops[1].sys_read_dep = NULL;
-    file_ops[1].sys_write_dep = sys_write_console; // warning pk no cuadran los parámetros
+    file_ops[1].sys_write_dep = sys_write_console;
     file_ops[1].sys_release_dep = NULL;
     file_ops[1].sys_unlink_dep = NULL;
     DIR[1].ops = &file_ops[1];
@@ -80,7 +80,7 @@ inline struct logic_device* createFile(const char *name)
 			ZeOSFAT[DIR[i].firstBlock] = EOF;
 			file_ops[i].sys_open_dep = sys_open_file; // ??
 			file_ops[i].sys_read_dep = sys_read_file;
-			file_ops[i].sys_write_dep = sys_write_file; // warning pk no cuadran los parámetros
+			file_ops[i].sys_write_dep = sys_write_file;
 			file_ops[i].sys_release_dep = sys_release_file;
 			file_ops[i].sys_unlink_dep = sys_unlink_file;
 			DIR[i].ops = &file_ops[i];
@@ -122,6 +122,8 @@ int sys_read_keyboard (int fd, char *buffer, int size) {
     int i;
     union task_union *t;
 
+    if(current()->Pid == 0) return -EPERM; // esto iba aquí
+
     if(!list_empty(&keyboardqueue) || buff_size < size) {
         /* Update Current Task Struct */
         t=(union task_union *)current();
@@ -162,11 +164,11 @@ int sys_read_file(int fd, char *buffer, int size)
 	int i;
     int bytes = 0;
 
-	if((OFTfile->seq_pos + size) > OFTfile->file->size) return -1; // MIRAR ERROR
+	//if((OFTfile->seq_pos + size) > OFTfile->file->size) return -1; // MIRAR ERROR
 
 	for(i = 0; i < nblock; ++i) block = ZeOSFAT[block];
 
-	for(i = 0; i < size; ++i)
+	for(i = 0; (i < size) && (OFTfile->seq_pos < OFTfile->file->size); ++i)
 	{
 		buffer[i] = HardDisk[block][blockPos];
 		++blockPos;
@@ -206,7 +208,7 @@ int sys_write_file(int fd, const char *buffer, int size)
 		{
             if(ZeOSFAT[block] == EOF) {
 			    newBlock = Alloc_Block();
-			    if(newBlock == -1) return -1; // mirar error
+			    if(newBlock == -1) return -ENOSPC; // mirar error
                 ZeOSFAT[block] = newBlock;
                 ZeOSFAT[newBlock] = EOF;
             }
@@ -218,7 +220,11 @@ int sys_write_file(int fd, const char *buffer, int size)
     return bytes;
 }
 
-int sys_unlink_file(struct logic_device *file) {
+int sys_unlink_file(struct logic_device *file) 
+{
+    Free_Blocks(file->firstBlock);
+    file->free = 1;
+//ERROR??
     return 0;
 }
 

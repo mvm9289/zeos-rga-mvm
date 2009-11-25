@@ -5,8 +5,10 @@ main(void) {
     /* Next line, tries to move value 0 to CR3 register. This register is a privileged one, and so it will raise an exception */
     /*__asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
     /* Uncomment next line to call the initial routine for the test cases */
-    /* runjp(); */
-    char buffer[301];
+     runjp();
+
+
+    /*char buffer[301];
     char buffer2[301];
     int aux;
     int fd;
@@ -49,10 +51,41 @@ main(void) {
             perror();
             while(1);
         }
+        aux = close(fd2);
+        if(aux == -1)  {
+            write(1, "close1", 6);
+            perror();
+            while(1);
+        }
+        aux = close(fd);
+        if(aux == -1)  {
+            write(1, "close2", 6);
+            perror();
+            while(1);
+        }
+        fd = unlink("asdf");
+        if(fd == -1)  {
+            write(1, "unlink", 5);
+            perror();
+            while(1);
+        }
+        fd = open("asdf", O_RDONLY | O_CREAT);
+        if(fd == -1)  {
+            write(1, "open3", 5);
+            perror();
+            while(1);
+        }
+        aux = read(fd, buffer2, strlen(buffer));
+        if(aux == -1)  {
+            write(1,"read2", 5);
+            perror();
+            while(1);
+        }else if(aux == 0) write(1,"0 Bytes",7);
+        
         break;
     default:
         break;
-    }
+    }*/
     while(1);
     return 0;
 }

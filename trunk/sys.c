@@ -49,18 +49,20 @@ int sys_open (char *path, int flags) { //TESTEAR CON O_CREAT + sys_open_dependie
 	if(!file) {
         if(flags < O_CREAT) return -ENOENT;
         
-        if(free_block == EOF) return -1; //ERROR?? (error no espacio en disco)
+        if(free_block == EOF) return -ENOSPC; //ERROR?? (error no espacio en disco)
 
         file = createFile(path);
-        if(!file) return -1; // QUE ERROR? (no espacio en dir)
+        if(!file) return -ENOSPC; // QUE ERROR? (no espacio en dir)
     }
-	else if(flags & 0x0C) return -EEXIST; /* File exists */
-    else if((flags & 0x04) /*&&  file->ops->sys_unlink_dep != NULL*/) {
-        //file->ops->sys_unlink_dep(file);
+	else if((flags & 0x0C) == 0x0C) return -EEXIST; /* File exists */
+    else if((flags & 0x04) &&  file->ops->sys_unlink_dep != NULL) {
+        file->ops->sys_unlink_dep(file);
         file = createFile(path);
     }
             
     /* O_CREAT sin O_EXCL se tiene que cargar el existente */
+    if(file->ops->sys_open_dep != NULL) file->ops->sys_open_dep(file);
+
 
     flags &= 0x03;
 
@@ -83,7 +85,7 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
     struct OFT_item *opened_file;
     struct logic_device *file;
 
-    if(current()->Pid == 0) return -1; // ERROR?? ---> EPERM /* Operation not permitted */ ??
+    //if(current()->Pid == 0) return -EPERM; // esto va solo cuando se lee de teclado
     err = comprova_fd(fd, READ);
     if(err != 0) return err;
     if(size < 0) return -EINVAL;
@@ -91,7 +93,9 @@ int sys_read(int fd, char *buffer, int size) { //TESTEAR
 
     opened_file = current()->channel_table[fd].opened_file;
     file = opened_file->file;
-    bytes += file->ops->sys_read_dep(fd, buffer, size);
+    if((err = file->ops->sys_read_dep(fd, buffer, size)) >= 0)
+        bytes += err;
+    else return err;
 
     return bytes;
 }
@@ -114,13 +118,13 @@ int sys_write(int fd, char *buffer, int size) { //TESTEAR CON O_CREAT
         copy_from_user(buffer+bytes, to_write, W_SIZE);
         if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) != -1)
             bytes += err;
-        else return -1; //ERROR???
+        else return err; //ERROR???
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
     if((err = file->ops->sys_write_dep(fd, to_write, size)) != -1)
         bytes += err;
-    else return -1; //ERROR???
+    else return err; //ERROR???
 
     return bytes;
 }
@@ -137,6 +141,7 @@ int sys_dup (int fd) { //TESTEAR CON O_CREAT
     current()->channel_table[dup_fd].opened_file = current()->channel_table[fd].opened_file;
 
 	current()->channel_table[dup_fd].opened_file->num_refs++;
+    current()->channel_table[dup_fd].opened_file->file->nb_refs++; // faltaba no?
 
 	return dup_fd;
 }	
@@ -157,18 +162,20 @@ int sys_close (int fd) {
 }
 
 int sys_unlink(const char *path) {
-	int res;
+    int res;
     struct logic_device *file;
 
     if(!access_ok(READ, path, FILE_NAME_SIZE)) return -EFAULT;
-    if(!pathlen_isOK(path)) return -ENOENT; // si es mas largo que 10 seguro que no está y no me meto a buscarlo
+    if(!pathlen_isOK(path)) return -ENAMETOOLONG; // si es mas largo que 10 seguro que no está y no me meto a buscarlo
 
     file = searchFile(path);
 
     if(file == NULL) return -ENOENT;
-    if(file->nb_refs > 0) return -EACCES; // o esta? ->  -ETXTBSY    /* Text file busy */
+    if(file->nb_refs > 0) return -EBUSY; //ERROR?
 
-    res = file->ops->sys_unlink_dep(file);
+    if(file->ops->sys_unlink_dep != NULL)
+        res = file->ops->sys_unlink_dep(file);
+    else res = -1; // ERROR??
 
     return res;
 }

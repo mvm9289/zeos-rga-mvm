@@ -1,0 +1,40 @@
+Errores de los tests:
+
+-close -> all OK
+
+-dup -> 1 BAD (solucionado -> la comprobación de si somos Task0 desplazada a sys_read_keyboard)
+Running Test: DUP(a newly created file and check that the file pointer is shared)Error: Permission denied TEST: Could not read the 1st written bytes-- result BAD
+
+-open -> all OK
+
+-read -> 1 MEDIUM(solucionado) + 1 BAD** (solucionado al solucionar el MEDIUM :S)
+Test:READ(read from keyboard (fd == 0) more bytes than keyboard buffer capacity) -- Result: BAD 
+
+
+-unlink -> 1 MEDIUM(solucionado) + 1 BAD (solucionado también -> faltaba la llamada a sys_open_dep en el open general)
+Test: UNLINK(file is being used by me)Error: No such file or directory ENDTEST: Removing file-- result BAD*
+
+-write -> 5 BAD
+Test:WRITE(writing in a file after reopening it) -- Result: BAD TEST: wrong result in read: not 4
+Test:WRITE(write several blocks to a file) -- Result: BAD TEST: wrong result in read
+Test:WRITE(write 1 block to a file) -- Result: BAD TEST: wrong result in read: not 256
+Test:WRITE(buffer to be written contains ' -- Result: BAD TEST: wrong result in read: not 8
+Test:WRITE(size to be written is smaller than strlen(buffer)) -- Result: BAD TEST: wrong result in read 
+
+Depués de correcciones:
+-close -> all OK
+
+-dup -> all OK
+
+-open -> all OK
+
+-read -> all OK
+
+-unlink -> all OK
+
+-write -> 5 BAD
+Test:WRITE(writing in a file after reopening it) -- Result: BAD TEST: wrong result in read: not 4
+Test:WRITE(write several blocks to a file) -- Result: BAD TEST: wrong result in read
+Test:WRITE(write 1 block to a file) -- Result: BAD TEST: wrong result in read: not 256
+Test:WRITE(buffer to be written contains ' -- Result: BAD TEST: wrong result in read: not 8
+Test:WRITE(size to be written is smaller than strlen(buffer)) -- Result: BAD TEST: wrong result in read 
