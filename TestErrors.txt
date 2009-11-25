@@ -14,7 +14,7 @@ Test:READ(read from keyboard (fd == 0) more bytes than keyboard buffer capacity)
 -unlink -> 1 MEDIUM(solucionado) + 1 BAD (solucionado también -> faltaba la llamada a sys_open_dep en el open general)
 Test: UNLINK(file is being used by me)Error: No such file or directory ENDTEST: Removing file-- result BAD*
 
--write -> 5 BAD
+-write -> 5 BAD (EPIC MEGAFAIL -> cuando actualizabamos los blockes del fichero después de llamar a Alloc_Block, newBlock, que es lo que devuelve, nunca se le asignaba a Block)
 Test:WRITE(writing in a file after reopening it) -- Result: BAD TEST: wrong result in read: not 4
 Test:WRITE(write several blocks to a file) -- Result: BAD TEST: wrong result in read
 Test:WRITE(write 1 block to a file) -- Result: BAD TEST: wrong result in read: not 256
@@ -32,9 +32,4 @@ Depués de correcciones:
 
 -unlink -> all OK
 
--write -> 5 BAD
-Test:WRITE(writing in a file after reopening it) -- Result: BAD TEST: wrong result in read: not 4
-Test:WRITE(write several blocks to a file) -- Result: BAD TEST: wrong result in read
-Test:WRITE(write 1 block to a file) -- Result: BAD TEST: wrong result in read: not 256
-Test:WRITE(buffer to be written contains ' -- Result: BAD TEST: wrong result in read: not 8
-Test:WRITE(size to be written is smaller than strlen(buffer)) -- Result: BAD TEST: wrong result in read 
+-write -> all OK
