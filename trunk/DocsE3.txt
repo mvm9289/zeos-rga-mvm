@@ -1,0 +1,31 @@
+
+Document de la entrega 3 del projecte 1 de PROSO:
+
+1. Disseny:
+    
+    Per a incloure la part de disc de la 3a entrega al nostre sistema operatiu hem inclòs, principalment, dues estructures de dades molt relacionades entre elles: ZeOSFAT i HardDisk.
+ZeOSFAT es un array d'enters de tamany MAX_BLOCKS (definit com 50 per res en especial, simplement ens vam posar d'acord en que era un bon numero) que ens indica els enllaços entre els blocks que tenim a HardDisk, sent aquest un vector de vectors de chars. En concret son MAX_BLOCK vectors de BLOCK_SIZE (256 -> definit per vosaltres) chars.
+
+Parlant ara de la gestió dels blocks, tenim també una variable free_block que ens marca l'index dins de la FAT del primer block dels blocks lliures (no ha de ser exactament el block lliure amb l'index més baix dins de ZeOSFAT). Aquest block al que apunta free_block apunta a la vegada a un altre block lliure i així fins a arribar a l'ultim lliure que pendrá per valor EOF (-1). Així doncs, els blocks lliures es com si formessin un gran (o no, segons com estigui d'ocupat el disc) fitxer ja que tots els blocks lliures estan enllaçats entre ells. De mateixa forma estan enllaçats els blocks de disc utilitzats per un mateix fitxer, acabant amb un block amb valor EOF. En el cas que free_block prengui per valor EOF significarà que no tenim espai lliure.
+
+Diverses estructures de dades han estat modificades (respecte la primera part d'aquesta 3a entrega), com per exemple Logic Device, a on hem afegit els atributs firstBlock i size que ens marquen, tal com diuen els seus noms, el primer block del fitxer i el tamany d'aquest.
+
+Les operacions de gestió de disc són Alloc_Block i Free_Blocks a més de InitZeOSFat: 
+    -La funció Alloc_Block ens retorna un block lliure i actualitza els blocks lliures del disc. La operació.
+    -La operació Free_Blocks rep un block per paràmetre (l'index d'aquest dins de la FAT) i allibera aquest block a més de, en el cas que tingui, els següents blocks que estiguin enllaçats amb aquest. Per a actualitzar l'espai lliure, el free_block passa a apuntar al block que ens passen per paràmetre i l'ultim de la cadena que volem alliberar passa a apuntar al anterior free_block. Així fem rapidament la actualització de l'espai lliure i aquest segueix enllaçat perfectament i consistent.
+    -La funció InitZeOSFat inicialitza la FAT amb tots els blocks enllaçats entre ells ja que están tots lliures, inicialitza el directori '/' amb les DIR_ENTRIES entrades lliures i inicialitza el Disc amb zeros.
+
+A més d'aquests operacions, algunes syscalls han estat modificades per a incloure la possibilitat d'utilitzar el disc i s'han afegir noves operacions auxiliars com, per exemple, createFile, que et crea un nou fitxer (només a l'open amb la opció O_CREAT) i li reserva un espai al disc.
+
+Pseudocodi?¿???¿??¿?¿?¿???
+
+2. Implementació:
+
+    La verdad, no se me ocurre que poner aquí...
+
+3. Descripció de les proves realitzades:
+    
+    Esk esto yo creo que es ponernos faena por ponernos faena tio. No me lo puedes preguntar en el feedback esto?? bah hasta las pelotas me tienen xD
+
+
+ 
