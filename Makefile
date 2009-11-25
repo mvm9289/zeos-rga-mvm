@@ -55,7 +55,7 @@ entry.s: entry.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 
 user.o:user.c $(INCLUDEDIR)/libc.h
 
-interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/entry.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/string.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/sys.h
+interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/entry.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/string.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/sys.h $(INCLUDEDIR)/keyboard.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/list.h
 
 string.o:string.c $(INCLUDEDIR)/string.h
 
@@ -65,22 +65,22 @@ libc.o:libc.c $(INCLUDEDIR)/libc.h $(INCLUDEDIR)/string.h $(INCLUDEDIR)/stats.h
 
 mm.o:mm.c $(INCLUDEDIR)/types.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/sched.h
 
-sched.o:sched.c $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/list.h
+sched.o:sched.c $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/list.h $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/openmodes.h
 
-sys.o:sys.c $(INCLUDEDIR)/sys.h $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/errno.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/mm_address.h $(INCLUDEDIR)/errno.h
+sys.o:sys.c $(INCLUDEDIR)/sys.h $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/errno.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/mm_address.h $(INCLUDEDIR)/openmodes.h $(INCLUDEDIR)/stats.h $(INCLUDEDIR)/string.h $(INCLUDEDIR)/filesystem.h
 
 utils.o:utils.c $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/mm_address.h
 
-devices.o:devices.c $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/io.h
+devices.o:devices.c $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/openmodes.h $(INCLUDEDIR)/string.h $(INCLUDEDIR)/keyboard.h $(INCLUDEDIR)/list.h $(INCLUDEDIR)/filesystem.h $(INCLUDEDIR)/errno.h
 
 hardware.o:hardware.c $(INCLUDEDIR)/hardware.h $(INCLUDEDIR)/types.h
 
 keyboard.o:keyboard.c $(INCLUDEDIR)/keyboard.h
 
-filesystem.o:filesystem.c $(INCLUDEDIR)/filesystem.h
+filesystem.o:filesystem.c $(INCLUDEDIR)/filesystem.h $(INCLUDEDIR)/devices.h
 
 
-system.o:system.c $(INCLUDEDIR)/hardware.h system.lds $(SYSOBJ) $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/system.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/mm_address.h 
+system.o:system.c $(INCLUDEDIR)/hardware.h system.lds $(SYSOBJ) $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/system.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/utils.h $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/filesystem.h
 
 
 system: system.o system.lds $(SYSOBJ)
