@@ -211,6 +211,7 @@ int sys_write_file(int fd, const char *buffer, int size)
 			    if(newBlock == -1) return -ENOSPC; // mirar error
                 ZeOSFAT[block] = newBlock;
                 ZeOSFAT[newBlock] = EOF;
+                block = newBlock;
             }
             else block = ZeOSFAT[block];
 			
