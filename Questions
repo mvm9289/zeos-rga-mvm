@@ -1,2 +1,4 @@
--Error proceso 0 read_keyboard?
 -Que hace el open dep/release dep?
+-pasar a read/write dependiente una @MEM o con el opened_file basta?
+    Si se le pasa @MEM como sabemos el bloque?
+    Hasta donde lee el read?
