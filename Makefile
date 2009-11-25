@@ -28,7 +28,7 @@ LINKFLAGS = -g
 
 SYSOBJ = interrupt.o entry.o io.o sys.o sched.o mm.o devices.o utils.o hardware.o string.o keyboard.o filesystem.o
 
-#add to USROBJ the object files required to complete the user program
+#add to USROBJ the object files required to com=plete the user program
 USROBJ = libc.o string.o #libjpwrite.a
 
 all:zeos.bin
