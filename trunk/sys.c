@@ -85,8 +85,8 @@ int sys_read(int fd, char *buffer, int size) {
 
     opened_file = current()->channel_table[fd].opened_file;
     file = opened_file->file;
-    if((err = file->ops->sys_read_dep(fd, buffer, size)) >= 0) bytes += err;
-    else return err;
+    if((err = file->ops->sys_read_dep((void *)opened_file, buffer, size)) < 0) return err;
+    bytes += err;
 
     return bytes;
 }
@@ -108,14 +108,14 @@ int sys_write(int fd, char *buffer, int size) {
 
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) != -1)
-            bytes += err;
-        else return err;
+        if((err = file->ops->sys_write_dep((void *)opened_file, to_write, W_SIZE)) < 0)
+            return err;
+        bytes += err;
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    if((err = file->ops->sys_write_dep(fd, to_write, size)) != -1) bytes += err;
-    else return err;
+    if((err = file->ops->sys_write_dep((void *)opened_file, to_write, size)) < 0) return err;
+    bytes += err;
 
     return bytes;
 }
@@ -199,8 +199,7 @@ int sys_fork(void) {
     tasks_free--;
 
     /* Copy System Data: task_union */
-    copy_data((void *) current(), (void *) &(task[tsk].t),
-      KERNEL_STACK_SIZE*sizeof(unsigned long));
+    copy_data((void *) current(), (void *) &(task[tsk].t), KERNEL_STACK_SIZE*sizeof(unsigned long));
 
     /* Copy User Data */
     phys_frames_free-=NUM_PAG_DATA;
@@ -213,8 +212,7 @@ int sys_fork(void) {
 
         /* Copy Data Page */
         set_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i, fr); // Set AUX page
-        copy_data((void *) ((PAG_LOG_INIT_DATA_P0+i)<<12),
-          (void *) ((PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i)<<12), PAGE_SIZE);
+        copy_data((void *) ((PAG_LOG_INIT_DATA_P0+i)<<12), (void *) ((PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i)<<12), PAGE_SIZE);
         del_ss_pag(PAG_LOG_INIT_DATA_P0+NUM_PAG_DATA+i); // Delete AUX page
     }
     set_cr3(); // Flush TLB
@@ -306,8 +304,7 @@ int sys_sem_signal(int n_sem) {
 
     sems[n_sem].count++;
     if(sems[n_sem].count <= 0) {
-        t=(union task_union *)
-          list_head_to_task_struct(sems[n_sem].blockqueue.next);
+        t=(union task_union *) list_head_to_task_struct(sems[n_sem].blockqueue.next);
         t->stack[KERNEL_STACK_SIZE-10]=0;
 
         list_del(sems[n_sem].blockqueue.next);
@@ -325,8 +322,7 @@ int sys_sem_destroy(int n_sem) {
     if(current()->sems_owner[n_sem]==NOT_OWNER) return -EPERM;
 
     while(sems[n_sem].count < 0) {
-        t=(union task_union *)
-          list_head_to_task_struct(sems[n_sem].blockqueue.next);
+        t=(union task_union *) list_head_to_task_struct(sems[n_sem].blockqueue.next);
         t->stack[KERNEL_STACK_SIZE-10]=-1;
 
         list_del(sems[n_sem].blockqueue.next);

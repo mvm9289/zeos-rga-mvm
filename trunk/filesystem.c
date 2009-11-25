@@ -2,7 +2,7 @@
 #include <filesystem.h>
 #include <devices.h>
 
-int initZeOSFat() { //MIRAR EL ERROR!!!!
+int initZeOSFat() {
     int i, j;
 
     free_block = 0;
@@ -21,26 +21,23 @@ int initZeOSFat() { //MIRAR EL ERROR!!!!
     return 0;
 }
 
-int Alloc_Block()
-{
-	int retornar = free_block;
-	if(free_block != EOF)
-	{
-		free_block = ZeOSFAT[free_block];
+int Alloc_Block() {
+    int retornar = free_block;
 
-		return retornar;
-	}
-	return -1;
+    if(free_block != EOF) {
+        free_block = ZeOSFAT[free_block];
+
+        return retornar;
+    }
+
+    return -1;
 }
 
-void Free_Blocks(int block)
-{ // para hacerlo facil podríamos poner el free_block al primero del fichero y el ultimo de este fichero enlazarlo con el free_block antiguo. free_block no sería el primer bloque libre... pero sería un bloque libre y estaría todo consistente. Lo que quizá es guarro.
-
+void Free_Blocks(int block){
     int oldFB = free_block;
-    free_block = block;
-    int i = block;
-    while(ZeOSFAT[i] != EOF) i = ZeOSFAT[i];
-    ZeOSFAT[i] = oldFB;
 
+    free_block = block;
+    while(ZeOSFAT[block] != EOF) block = ZeOSFAT[block];
+    ZeOSFAT[block] = oldFB;
 }
 

@@ -236,6 +236,7 @@ void free_frame( unsigned int frame ) {
 
 int alloc_task_struct() {
     int tsk;
+
     /* Search allocation for task struct */
     for(tsk=1; tsk<NR_TASKS; tsk++) {
         if(task[tsk].t.task.allocation==FREE) {
