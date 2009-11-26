@@ -76,7 +76,7 @@ main(void) {
     init_mm();
 
     /* Initialize ZeOSFat */
-    initZeOSFat();
+    if(initZeOSFat() == -1) printk("\nError: ZeOSFat file system already initialized!\n\n");
 
     /* Initialize Devices */
     init_devices();

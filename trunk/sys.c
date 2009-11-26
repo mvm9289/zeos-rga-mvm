@@ -35,16 +35,16 @@ int sys_open (char *path, int flags) {
 
     if(!access_ok(READ, path, FILE_NAME_SIZE)) return -EFAULT;
     if(!pathlen_isOK(path)) return -ENAMETOOLONG;
-	if(!(flags & 0x03) || (flags & 0xF0)) return -EINVAL;
+    if(!(flags & 0x03) || (flags & 0xF0)) return -EINVAL;
 
-	new_opened_file = getNewOpenedFile();
+    new_opened_file = getNewOpenedFile();
     if(!new_opened_file) return -ENFILE;
-	
-	fd = getFreeChannel(current()->channel_table);
-	if(fd == -1) return -EMFILE;
+
+    fd = getFreeChannel(current()->channel_table);
+    if(fd == -1) return -EMFILE;
 
     file = searchFile(path);
-	if(!file) {
+    if(!file) {
         if(flags < O_CREAT) return -ENOENT;
         
         if(free_block == EOF) return -ENOSPC;
@@ -53,8 +53,6 @@ int sys_open (char *path, int flags) {
         if(!file) return -ENOSPC;
     }
 	else if((flags & 0x0C) == 0x0C) return -EEXIST;
-
-    if(file->ops->sys_open_dep != NULL) file->ops->sys_open_dep(file);
 
     flags &= 0x03;
 
@@ -68,6 +66,8 @@ int sys_open (char *path, int flags) {
 
 	current()->channel_table[fd].free = 0;
 	current()->channel_table[fd].opened_file = new_opened_file;
+
+    if(file->ops->sys_open_dep != NULL) file->ops->sys_open_dep(fd);
 
 	return fd;
 }
@@ -85,7 +85,7 @@ int sys_read(int fd, char *buffer, int size) {
 
     opened_file = current()->channel_table[fd].opened_file;
     file = opened_file->file;
-    if((err = file->ops->sys_read_dep((void *)opened_file, buffer, size)) < 0) return err;
+    if((err = file->ops->sys_read_dep(fd, buffer, size)) < 0) return err;
     bytes += err;
 
     return bytes;
@@ -108,13 +108,13 @@ int sys_write(int fd, char *buffer, int size) {
 
     while (size > W_SIZE) {
         copy_from_user(buffer+bytes, to_write, W_SIZE);
-        if((err = file->ops->sys_write_dep((void *)opened_file, to_write, W_SIZE)) < 0)
+        if((err = file->ops->sys_write_dep(fd, to_write, W_SIZE)) < 0)
             return err;
         bytes += err;
         size -= W_SIZE;
     }
     copy_from_user(buffer+bytes, to_write, size);
-    if((err = file->ops->sys_write_dep((void *)opened_file, to_write, size)) < 0) return err;
+    if((err = file->ops->sys_write_dep(fd, to_write, size)) < 0) return err;
     bytes += err;
 
     return bytes;
@@ -140,7 +140,7 @@ int sys_dup (int fd) {
     ch->free = 0;
     ch->opened_file = opened_file;
 	opened_file->num_refs++;
-    if(file->ops->sys_open_dep != NULL) file->ops->sys_open_dep(file);
+    if(file->ops->sys_open_dep != NULL) file->ops->sys_open_dep(dup_fd);
 
 	return dup_fd;
 }	
@@ -159,7 +159,7 @@ int sys_close (int fd) {
 
 	ch->free = 1;
 	opened_file->num_refs--;
-    if(file->ops->sys_release_dep != NULL) file->ops->sys_release_dep(file);
+    if(file->ops->sys_release_dep != NULL) file->ops->sys_release_dep(fd);
 
 	return 0;
 }

@@ -108,7 +108,7 @@ inline struct OFT_item* getNewOpenedFile() {
     return NULL;
 }
 
-int sys_write_console (void *OFTitem, const char *buffer, int size) {
+int sys_write_console (int fd, const char *buffer, int size) {
     int i;
 
     for(i=0; i<size; i++) printc(buffer[i]);
@@ -116,7 +116,7 @@ int sys_write_console (void *OFTitem, const char *buffer, int size) {
     return i;
 }
 
-int sys_read_keyboard (void *OFTitem, char *buffer, int size) {
+int sys_read_keyboard (int fd, char *buffer, int size) {
     int i;
     union task_union *t;
 
@@ -147,14 +147,14 @@ int sys_read_keyboard (void *OFTitem, char *buffer, int size) {
     return size;
 }
 
-int sys_open_file(struct logic_device *file) {
-    file->nb_refs++;
+int sys_open_file(int fd) {
+    current()->channel_table[fd].opened_file->file->nb_refs++;
 
     return 0;
 }
 
-int sys_read_file(void *OFTitem, char *buffer, int size) {
-    struct OFT_item *opened_file = (struct OFT_item *)OFTitem;
+int sys_read_file(int fd, char *buffer, int size) {
+    struct OFT_item *opened_file = current()->channel_table[fd].opened_file;
     struct logic_device *file = opened_file->file;
 	int nblock = opened_file->seq_pos / BLOCK_SIZE;
 	int blockPos = opened_file->seq_pos % BLOCK_SIZE;
@@ -179,8 +179,8 @@ int sys_read_file(void *OFTitem, char *buffer, int size) {
     return bytes;		
 }
 
-int sys_write_file(void *OFTitem, const char *buffer, int size) {
-    struct OFT_item *opened_file = (struct OFT_item *)OFTitem;
+int sys_write_file(int fd, const char *buffer, int size) {
+    struct OFT_item *opened_file = current()->channel_table[fd].opened_file;
     struct logic_device *file = opened_file->file;
     int nblock = opened_file->seq_pos / BLOCK_SIZE;
     int blockPos = opened_file->seq_pos % BLOCK_SIZE;
@@ -223,8 +223,8 @@ int sys_unlink_file(struct logic_device *file) {
     return 0;
 }
 
-int sys_release_file (struct logic_device *file) {
-    file->nb_refs--;
+int sys_release_file (int fd) {
+    current()->channel_table[fd].opened_file->file->nb_refs--;
 
     return 0;
 }
