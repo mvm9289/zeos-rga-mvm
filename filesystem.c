@@ -1,9 +1,13 @@
 
 #include <filesystem.h>
-#include <devices.h>
+#include <devices.h> 
+
+int ZeOSFat_initialized = 0;
 
 int initZeOSFat() {
     int i, j;
+
+    if(ZeOSFat_initialized) return -1;
 
     free_block = 0;
     for(i = 0; i < MAX_BLOCKS-1; ++i)
@@ -17,6 +21,8 @@ int initZeOSFat() {
     for (i = 0; i < MAX_BLOCKS; i++)
         for (j = 0; j < BLOCK_SIZE; j++)
             HardDisk[i][j] = 0;
+
+    ZeOSFat_initialized = 1;
 
     return 0;
 }
