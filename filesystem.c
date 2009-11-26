@@ -27,7 +27,7 @@ int initZeOSFat() {
     return 0;
 }
 
-int Alloc_Block() {
+inline int Alloc_Block() {
     int retornar = free_block;
 
     if(free_block != EOF) {
@@ -39,7 +39,7 @@ int Alloc_Block() {
     return -1;
 }
 
-void Free_Blocks(int block){
+inline void Free_Blocks(int block){
     int oldFB = free_block;
 
     free_block = block;

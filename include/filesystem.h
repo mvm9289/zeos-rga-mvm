@@ -13,7 +13,7 @@ Byte HardDisk[MAX_BLOCKS][BLOCK_SIZE];
 int free_block;
 
 int initZeOSFat();
-int Alloc_Block();
-void Free_Blocks(int block);
+inline int Alloc_Block();
+inline void Free_Blocks(int block);
 
 #endif
