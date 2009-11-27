@@ -14,6 +14,5 @@ extern int buff_size;
 
 void buff_keyboard_insert(char c);
 char buff_keyboard_get_next();
-int buff_keyboard_size();
 
 #endif /* __KEYBOARD_H__ */
