@@ -9,7 +9,11 @@
 int comprova_fd(int fd, int operacio);
 int sys_ni_syscall();
 int sys_open (char *path, int flags);
+int sys_read(int fd, char *buffer, int size);
 int sys_write(int fd,char *buffer, int size);
+int sys_dup (int fd);
+int sys_close (int fd);
+int sys_unlink(const char *path);
 int sys_getpid(void);
 int sys_fork(void);
 int sys_nice(int quantum);

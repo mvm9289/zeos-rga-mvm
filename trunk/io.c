@@ -78,6 +78,7 @@ void printc(char c) {
 
 void printk(char *string) {
     int i;
+
     for (i = 0; string[i]; i++)
         printc(string[i]);
 }
