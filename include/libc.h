@@ -25,8 +25,8 @@ int unlink(const char *path);
 
 int getpid(void);
 int fork(void);
-void exit(void);
 int nice (int quantum);
+void exit(void);
 int get_stats(int pid, struct stats *st);
 
 int sem_init(int n_sem, unsigned int value);

@@ -2,7 +2,7 @@
 #include <filesystem.h>
 #include <devices.h> 
 
-int ZeOSFat_initialized = 0;
+unsigned int ZeOSFat_initialized = 0;
 
 int initZeOSFat() {
     int i, j;

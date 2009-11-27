@@ -150,13 +150,13 @@ void perror() {
 int open (const char *path, int flags) {
 	int res=0;
     __asm__ __volatile (
-    "pushl %%ebx\n"
-    "movl 8(%%ebp), %%ebx\n"
-	"movl 12(%%ebp), %%ecx\n"
-    "movl $5, %%eax\n"
-    "int $0x80\n"
-    "movl %%eax, %0\n"
-    "popl %%ebx": "=g" (res) );
+		"pushl %%ebx\n"
+		"movl 8(%%ebp), %%ebx\n"
+		"movl 12(%%ebp), %%ecx\n"
+		"movl $5, %%eax\n"
+		"int $0x80\n"
+		"movl %%eax, %0\n"
+		"popl %%ebx": "=g" (res) );
 
     if(res < 0) {
         errno = -res;
@@ -209,12 +209,12 @@ int write(int fd,char *buffer,int size) {
 int dup(int fd) {
 	int res=0;
     __asm__ __volatile (
-    "pushl %%ebx\n"
-    "movl 8(%%ebp), %%ebx\n"
-    "movl $41, %%eax\n"
-    "int $0x80\n"
-    "movl %%eax, %0\n"
-    "popl %%ebx": "=g" (res) );
+		"pushl %%ebx\n"
+		"movl 8(%%ebp), %%ebx\n"
+		"movl $41, %%eax\n"
+		"int $0x80\n"
+		"movl %%eax, %0\n"
+		"popl %%ebx": "=g" (res) );
 
     if(res < 0) {
         errno = -res;
@@ -227,12 +227,12 @@ int dup(int fd) {
 int close(int fd) {
 	int res=0;
     __asm__ __volatile (
-    "pushl %%ebx\n"
-    "movl 8(%%ebp), %%ebx\n"
-    "movl $6, %%eax\n"
-    "int $0x80\n"
-    "movl %%eax, %0\n"
-    "popl %%ebx": "=g" (res) );
+		"pushl %%ebx\n"
+		"movl 8(%%ebp), %%ebx\n"
+		"movl $6, %%eax\n"
+		"int $0x80\n"
+		"movl %%eax, %0\n"
+		"popl %%ebx": "=g" (res) );
 
     if(res < 0) {
         errno = -res;
@@ -245,12 +245,12 @@ int close(int fd) {
 int unlink(const char *path) {
     int res=0;
     __asm__ __volatile (
-    "pushl %%ebx\n"
-    "movl 8(%%ebp), %%ebx\n"
-    "movl $10, %%eax\n"
-    "int $0x80\n"
-    "movl %%eax, %0\n"
-    "popl %%ebx": "=g" (res) );
+		"pushl %%ebx\n"
+		"movl 8(%%ebp), %%ebx\n"
+		"movl $10, %%eax\n"
+		"int $0x80\n"
+		"movl %%eax, %0\n"
+		"popl %%ebx": "=g" (res) );
 
     if(res < 0) {
         errno = -res;
@@ -265,8 +265,7 @@ int getpid (void) {
     __asm__ __volatile (
         "movl $20, %%eax\n"
         "int $0x80\n"
-        "movl %%eax, %0" : "=g" (res)
-    );
+        "movl %%eax, %0" : "=g" (res) );
 	
     return res;
 }
@@ -276,8 +275,7 @@ int fork(void) {
     __asm__ __volatile__ (
         "movl $2, %%eax\n"
         "int $0x80\n"
-        "movl %%eax, %0\n" : "=g" (res)
-    );
+        "movl %%eax, %0\n" : "=g" (res) );
 
     if(res < 0) {
         errno = -res;
@@ -295,8 +293,7 @@ int nice (int quantum) {
         "movl $34, %%eax\n"
         "int $0x80\n"
         "movl %%eax, %0\n"
-        "popl %%ebx" : "=g" (res)
-    );
+        "popl %%ebx" : "=g" (res) );
 
     if(res < 0) {
         errno = -res;
@@ -309,8 +306,7 @@ int nice (int quantum) {
 void exit (void) {
     __asm__ __volatile__ (
         "movl  $1, %eax\n"
-        "int $0x80"
-    );	
+        "int $0x80" );	
 }
 
 int get_stats(int pid, struct stats *st) {
