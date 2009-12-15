@@ -39,8 +39,8 @@ extern void *sys_call_table[];
 void *old_sys_calls[SYSCALLS_MONITORIZED];
 void *new_sys_calls[SYSCALLS_MONITORIZED];
 
-char *names[SYSCALLS_MONITORIZED] = {"OPEN", "WRITE", "LSEEK", "CLOSE", "CLONE"};
-int syscall_pos_of[SYSCALLS_MONITORIZED] = {SYSCALL_OPEN, SYSCALL_WRITE, SYSCALL_LSEEK, SYSCALL_CLOSE, SYSCALL_CLONE};
+char *names[SYSCALLS_MONITORIZED] = {"OPEN", "CLOSE", "WRITE", "LSEEK", "CLONE"};
+int syscall_pos_of[SYSCALLS_MONITORIZED] = {SYSCALL_OPEN, SYSCALL_CLOSE, SYSCALL_WRITE, SYSCALL_LSEEK, SYSCALL_CLONE};
 
 /* Monitor Operations */
 long new_sys_open (const char __user *filename, int flags, int mode);

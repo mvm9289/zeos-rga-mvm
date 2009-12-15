@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <linux/errno.h>
 
-#define PRINTFS 42
+#define PRINTFS 44
 
 void suicide_me() {
     exit(0);
@@ -91,7 +91,6 @@ int main() {
         good_opens++;
     }
 
-    printf("\nTEST 5: Close an exist fd with result OK. (x5)");
     for (i = 0; i < 5; i++) {
         fd1 = dup(2);
         fd2 = close(fd1);
@@ -104,11 +103,11 @@ int main() {
         }
         else good_closes++;
     }
+    printf("\nTEST 5: Close an exist fd with result OK. (x5)");
     if (bad_result) printf("----->Result BAD\n");
     else printf("----->Result OK\n");
     bad_result = 0;
 
-    printf("\nTEST 6: Close a non exist fd with result BAD.(x5)");
     fd1 = -1;
     for (i = 0; i < 5; i++) {
         fd2 = close(fd1);
@@ -118,11 +117,11 @@ int main() {
         }
         else good_closes++;
     }
+    printf("\nTEST 6: Close a non exist fd with result BAD.(x5)");
     if (bad_result) printf("----->Result OK\n");
     else printf("----->Result BAD\n");
     bad_result = 0;
 
-    printf("\nTEST 7: Write a non exist fd with result BAD.(x5)");
     for (i = 0; i < 5; i++) {
         fd1 = write(-1, "\nTHIS SHOULD NOT SHOW\n", 20);
         if (fd1 == -1) {
@@ -131,11 +130,11 @@ int main() {
         }
         else good_writes++;
     }
+    printf("\nTEST 7: Write a non exist fd with result BAD.(x5)");
     if (bad_result) printf("----->Result OK\n");
     else printf("----->Result BAD\n");
     bad_result = 0;
 
-    printf("\nTEST 8: Lseek an exist fd with result OK.(x5)");
     for (i = 0; i < 5; i++) {
         fd1 = lseek(fd0, 0, SEEK_END);
         if (fd1 == -1) {
@@ -147,11 +146,11 @@ int main() {
         }
         else good_lseeks++;
     }
+    printf("\nTEST 8: Lseek an exist fd with result OK.(x5)");
     if (bad_result) printf("----->Result BAD\n");
     else printf("----->Result OK\n");
     bad_result = 0;
 
-    printf("\nTEST 9: Lseek a non exist fd with result BAD.(x5)");
     for (i = 0; i < 5; i++) {
         fd1 = lseek(-1, 0, SEEK_END);
         if (fd1 == -1) {
@@ -160,13 +159,13 @@ int main() {
         }
         else good_lseeks++;
     }
+    printf("\nTEST 9: Lseek a non exist fd with result BAD.(x5)");
     if (bad_result) printf("----->Result OK\n");
     else printf("----->Result BAD\n");
     bad_result = 0;
 
-    printf("\nTEST 10: Clone with result OK.(x5)");
     for (i = 0; i < 5; i++) {
-        //fd1 = clone((void *)exit, buffer, CLONE_SIGHAND, NULL);
+        fd1 = clone((void *)suicide_me, buffer, CLONE_SIGHAND, NULL);
         if (fd1 == -1) {
             perror(buffer);
             printf(buffer);
@@ -176,22 +175,23 @@ int main() {
         }
         else good_clones++;
     }
+    printf("\nTEST 10: Clone with result OK.(x5)");
     if (bad_result) printf("----->Result BAD\n");
     else printf("----->Result OK\n");
     bad_result = 0;
 
-    /*printf("\nTEST 11: Clone with result BAD.(x5)");
     for (i = 0; i < 5; i++) {
-        fd1 = clone((void *)exit, buffer, -1, NULL);
+        fd1 = clone((void *)suicide_me, NULL, CLONE_SIGHAND, NULL);
         if (fd1 == -1) {
             bad_clones++;
             bad_result = 1;
         }
         else good_clones++;
     }
+    printf("\nTEST 11: Clone with result BAD.(x5)");
     if (bad_result) printf("----->Result OK\n");
     else printf("----->Result BAD\n");
-    bad_result = 0;*/
+    bad_result = 0;
 
     unlink("newfile");
 

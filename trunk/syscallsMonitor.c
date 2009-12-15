@@ -71,58 +71,6 @@ long new_sys_open (const char __user *filename, int flags, int mode) {
     return res;
 }
 
-ssize_t new_sys_write(unsigned int fd, const char __user * buf, size_t count) {
-    unsigned long long cycles;
-    ssize_t res;
-    struct thread_info_extended *th_info = (struct thread_info_extended *)current_thread_info();
-    
-    try_module_get(THIS_MODULE);
-
-    if(th_info->pid != current->pid) {
-        reset_stats(th_info->stats);
-        th_info->pid = current->pid;
-    }
-
-    th_info->stats[WRITE].total_calls++;
-    cycles = proso_get_cycles();
-    res = ((ssize_t (*)(unsigned int, const char __user *, size_t))old_sys_calls[WRITE])(fd, buf, count);
-    cycles = proso_get_cycles() - cycles;
-    th_info->stats[WRITE].total_time += cycles;
-
-    if(res < 0) th_info->stats[WRITE].error_calls++;
-    else th_info->stats[WRITE].ok_calls++;
-
-    module_put(THIS_MODULE);
-
-    return res;
-}
-
-int new_sys_clone(struct pt_regs regs) {
-    unsigned long long cycles;
-    int res;
-    struct thread_info_extended *th_info = (struct thread_info_extended *)current_thread_info();
-    
-    try_module_get(THIS_MODULE);
-
-    if(th_info->pid != current->pid) {
-        reset_stats(th_info->stats);
-        th_info->pid = current->pid;
-    }
-
-    th_info->stats[CLONE].total_calls++;
-    cycles = proso_get_cycles();
-    res = ((int (*)(struct pt_regs))old_sys_calls[CLONE])(regs);
-    cycles = proso_get_cycles() - cycles;
-    th_info->stats[CLONE].total_time += cycles;
-
-    if(res < 0) th_info->stats[CLOSE].error_calls++;
-    else th_info->stats[CLONE].ok_calls++;
-
-    module_put(THIS_MODULE);
-
-    return res;
-}
-
 long new_sys_close(unsigned int fd) {
     unsigned long long cycles;
     long res;
@@ -143,6 +91,32 @@ long new_sys_close(unsigned int fd) {
 
     if(res < 0) th_info->stats[CLOSE].error_calls++;
     else th_info->stats[CLOSE].ok_calls++;
+
+    module_put(THIS_MODULE);
+
+    return res;
+}
+
+ssize_t new_sys_write(unsigned int fd, const char __user * buf, size_t count) {
+    unsigned long long cycles;
+    ssize_t res;
+    struct thread_info_extended *th_info = (struct thread_info_extended *)current_thread_info();
+    
+    try_module_get(THIS_MODULE);
+
+    if(th_info->pid != current->pid) {
+        reset_stats(th_info->stats);
+        th_info->pid = current->pid;
+    }
+
+    th_info->stats[WRITE].total_calls++;
+    cycles = proso_get_cycles();
+    res = ((ssize_t (*)(unsigned int, const char __user *, size_t))old_sys_calls[WRITE])(fd, buf, count);
+    cycles = proso_get_cycles() - cycles;
+    th_info->stats[WRITE].total_time += cycles;
+
+    if(res < 0) th_info->stats[WRITE].error_calls++;
+    else th_info->stats[WRITE].ok_calls++;
 
     module_put(THIS_MODULE);
 
@@ -175,11 +149,37 @@ off_t new_sys_lseek(unsigned int fd, off_t offset, unsigned int origin) {
     return res;
 }
 
+int new_sys_clone(struct pt_regs regs) {
+    unsigned long long cycles;
+    int res;
+    struct thread_info_extended *th_info = (struct thread_info_extended *)current_thread_info();
+ 
+    try_module_get(THIS_MODULE);
+
+    if(th_info->pid != current->pid) {
+        reset_stats(th_info->stats);
+        th_info->pid = current->pid;
+    }
+
+    th_info->stats[CLONE].total_calls++;
+    cycles = proso_get_cycles();
+    res = ((int (*)(struct pt_regs))old_sys_calls[CLONE])(regs);
+    cycles = proso_get_cycles() - cycles;
+    th_info->stats[CLONE].total_time += cycles;
+
+    if(res < 0) th_info->stats[CLONE].error_calls++;
+    else th_info->stats[CLONE].ok_calls++;
+
+    module_put(THIS_MODULE);
+
+    return res;
+}
+
 /* Monitor Download */
 static void __exit syscallsMonitor_exit(void) {
     deactivate_monitor(-1);
     print_stats();
-    printk(KERN_EMERG "Syscalls Monitor Module downloaded!\n\n");
+    printk(KERN_EMERG "\nSyscalls Monitor Module downloaded!\n\n");
 }
 
 /* Auxiliary Operations */
@@ -226,7 +226,7 @@ void print_stats(void) {
 
     task = find_task_by_pid(pid);
 
-    if (task == NULL) printk(KERN_EMERG "ERROR: Stats of process %d can not be displayed because the process is dead.", pid);
+    if (task == NULL) printk(KERN_EMERG "\nERROR: Stats of process %d can not be displayed because the process is dead.\n", pid);
     else {
         stats = ((struct thread_info_extended *)task->thread_info)->stats;
         for (i = 0; i < SYSCALLS_MONITORIZED; ++i) {
