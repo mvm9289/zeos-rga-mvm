@@ -14,13 +14,6 @@ MODULE_AUTHOR("ROGER ORIOL GARCIA ALVAREZ & MIGUEL ANGEL VICO MOYA");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Consultant of syscalls statistics of monitored processes.");
 
-dev_t device;
-struct cdev *consultant_cdev;
-unsigned int open = 0;
-int first_pid;
-struct task_struct *actual_process;
-int monitor_syscall;
-
 /* Consultant Initialization */
 static int __init syscallsConsultant_init(void) {
     int res;
@@ -35,7 +28,7 @@ static int __init syscallsConsultant_init(void) {
     res = cdev_add(consultant_cdev, device, 1);
     if (res < 0) return -1;
 
-    printk(KERN_EMERG "Syscalls Consultant Module loaded!");
+    printk(KERN_EMERG "Syscalls Consultant Module loaded!\n\n");
 
     return 0; 
 }
@@ -49,7 +42,7 @@ int consultant_open(struct inode *i, struct file *f) {
 
     first_pid = current->pid;
     actual_process = (struct task_struct *)current;
-    monitor_syscall = OPEN;
+    monitor_syscall = OPEN_CALL;
 
     return 0;
 }
@@ -115,7 +108,7 @@ int consultant_release(struct inode *i, struct file *f) {
 static void __exit syscallsConsultant_exit(void) {
     unregister_chrdev_region(device, 1);
     
-    printk(KERN_EMERG "Syscalls Consultant Module downloaded!");
+    printk(KERN_EMERG "\nSyscalls Consultant Module downloaded!\n\n");
 }
 
 module_init(syscallsConsultant_init);

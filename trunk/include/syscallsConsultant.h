@@ -9,6 +9,14 @@
 #define CONSULTANT_MAJOR 256
 #define CONSULTANT_MINOR 0
 
+/* Consultant Data */
+dev_t device;
+struct cdev *consultant_cdev;
+unsigned int open = 0;
+int first_pid;
+struct task_struct *actual_process;
+int monitor_syscall;
+
 /* Consultant Operations */
 ssize_t consultant_read(struct file *f, char __user *buffer, size_t s, loff_t *off);
 int consultant_ioctl(struct inode *i, struct file *f, unsigned int arg1, unsigned long arg2);

@@ -9,12 +9,11 @@
 
 #define PRINTFS 44
 
-void suicide_me() {
-    exit(0);
-}
+void do_nothing() {}
 
 int main() {
     char buffer[256];
+    void **stack;
 
     int good_opens = 0;
     int bad_opens = 0;
@@ -165,7 +164,7 @@ int main() {
     bad_result = 0;
 
     for (i = 0; i < 5; i++) {
-        fd1 = clone((void *)suicide_me, buffer, CLONE_SIGHAND, NULL);
+        fd1 = clone((void *)do_nothing, stack, CLONE_VM | CLONE_FILES, NULL);
         if (fd1 == -1) {
             perror(buffer);
             printf(buffer);
@@ -181,7 +180,7 @@ int main() {
     bad_result = 0;
 
     for (i = 0; i < 5; i++) {
-        fd1 = clone((void *)suicide_me, NULL, CLONE_SIGHAND, NULL);
+        fd1 = clone((void *)do_nothing, stack, CLONE_SIGHAND, NULL);
         if (fd1 == -1) {
             bad_clones++;
             bad_result = 1;

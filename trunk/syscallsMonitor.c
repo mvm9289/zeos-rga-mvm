@@ -6,7 +6,6 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include "include/syscallsMonitor.h"
-#include "include/syscallsmon.h"
 
 MODULE_AUTHOR("ROGER ORIOL GARCIA ALVAREZ & MIGUEL ANGEL VICO MOYA");
 MODULE_LICENSE("GPL");
@@ -26,17 +25,17 @@ static int __init syscallsMonitor_init(void) {
         ((struct thread_info_extended *)task->thread_info)->pid = STATS_NO_INIT;
     }
 
-    old_sys_calls[OPEN] = sys_call_table[SYSCALL_OPEN];
-    old_sys_calls[WRITE] = sys_call_table[SYSCALL_WRITE];
-    old_sys_calls[LSEEK] = sys_call_table[SYSCALL_LSEEK];
-    old_sys_calls[CLOSE] = sys_call_table[SYSCALL_CLOSE];
-    old_sys_calls[CLONE] = sys_call_table[SYSCALL_CLONE];
+    old_sys_calls[OPEN_CALL] = sys_call_table[SYSCALL_OPEN];
+    old_sys_calls[CLOSE_CALL] = sys_call_table[SYSCALL_CLOSE];
+    old_sys_calls[WRITE_CALL] = sys_call_table[SYSCALL_WRITE];
+    old_sys_calls[LSEEK_CALL] = sys_call_table[SYSCALL_LSEEK];
+    old_sys_calls[CLONE_CALL] = sys_call_table[SYSCALL_CLONE];
 
-    new_sys_calls[OPEN] = (void *) new_sys_open;
-    new_sys_calls[WRITE] = (void *) new_sys_write;
-    new_sys_calls[LSEEK] = (void *) new_sys_lseek;
-    new_sys_calls[CLOSE] = (void *) new_sys_close;
-    new_sys_calls[CLONE] = (void *) new_sys_clone;
+    new_sys_calls[OPEN_CALL] = (void *) new_sys_open;
+    new_sys_calls[CLOSE_CALL] = (void *) new_sys_close;
+    new_sys_calls[WRITE_CALL] = (void *) new_sys_write;
+    new_sys_calls[LSEEK_CALL] = (void *) new_sys_lseek;
+    new_sys_calls[CLONE_CALL] = (void *) new_sys_clone;
 
     activate_monitor(-1);
     printk(KERN_EMERG "Syscalls Monitor Module loaded!\n\n");
@@ -57,14 +56,14 @@ long new_sys_open (const char __user *filename, int flags, int mode) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[OPEN].total_calls++;
+    th_info->stats[OPEN_CALL].total_calls++;
     cycles = proso_get_cycles();
-    res = ((long (*)(const char __user *, int, int))old_sys_calls[OPEN])(filename, flags, mode);
+    res = ((long (*)(const char __user *, int, int))old_sys_calls[OPEN_CALL])(filename, flags, mode);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[OPEN].total_time += cycles;
+    th_info->stats[OPEN_CALL].total_time += cycles;
 
-    if(res < 0) th_info->stats[OPEN].error_calls++;
-    else th_info->stats[OPEN].ok_calls++;
+    if(res < 0) th_info->stats[OPEN_CALL].error_calls++;
+    else th_info->stats[OPEN_CALL].ok_calls++;
 
     module_put(THIS_MODULE);
 
@@ -83,14 +82,14 @@ long new_sys_close(unsigned int fd) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[CLOSE].total_calls++;
+    th_info->stats[CLOSE_CALL].total_calls++;
     cycles = proso_get_cycles();
-    res = ((long (*)(unsigned int))old_sys_calls[CLOSE])(fd);
+    res = ((long (*)(unsigned int))old_sys_calls[CLOSE_CALL])(fd);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[CLOSE].total_time += cycles;
+    th_info->stats[CLOSE_CALL].total_time += cycles;
 
-    if(res < 0) th_info->stats[CLOSE].error_calls++;
-    else th_info->stats[CLOSE].ok_calls++;
+    if(res < 0) th_info->stats[CLOSE_CALL].error_calls++;
+    else th_info->stats[CLOSE_CALL].ok_calls++;
 
     module_put(THIS_MODULE);
 
@@ -109,14 +108,14 @@ ssize_t new_sys_write(unsigned int fd, const char __user * buf, size_t count) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[WRITE].total_calls++;
+    th_info->stats[WRITE_CALL].total_calls++;
     cycles = proso_get_cycles();
-    res = ((ssize_t (*)(unsigned int, const char __user *, size_t))old_sys_calls[WRITE])(fd, buf, count);
+    res = ((ssize_t (*)(unsigned int, const char __user *, size_t))old_sys_calls[WRITE_CALL])(fd, buf, count);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[WRITE].total_time += cycles;
+    th_info->stats[WRITE_CALL].total_time += cycles;
 
-    if(res < 0) th_info->stats[WRITE].error_calls++;
-    else th_info->stats[WRITE].ok_calls++;
+    if(res < 0) th_info->stats[WRITE_CALL].error_calls++;
+    else th_info->stats[WRITE_CALL].ok_calls++;
 
     module_put(THIS_MODULE);
 
@@ -135,14 +134,14 @@ off_t new_sys_lseek(unsigned int fd, off_t offset, unsigned int origin) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[LSEEK].total_calls++;
+    th_info->stats[LSEEK_CALL].total_calls++;
     cycles = proso_get_cycles();
-    res = ((off_t (*)(unsigned int, off_t, unsigned int))old_sys_calls[LSEEK])(fd, offset, origin);
+    res = ((off_t (*)(unsigned int, off_t, unsigned int))old_sys_calls[LSEEK_CALL])(fd, offset, origin);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[LSEEK].total_time += cycles;
+    th_info->stats[LSEEK_CALL].total_time += cycles;
 
-    if(res < 0) th_info->stats[LSEEK].error_calls++;
-    else th_info->stats[LSEEK].ok_calls++;
+    if(res < 0) th_info->stats[LSEEK_CALL].error_calls++;
+    else th_info->stats[LSEEK_CALL].ok_calls++;
 
     module_put(THIS_MODULE);
 
@@ -161,14 +160,14 @@ int new_sys_clone(struct pt_regs regs) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[CLONE].total_calls++;
+    th_info->stats[CLONE_CALL].total_calls++;
     cycles = proso_get_cycles();
-    res = ((int (*)(struct pt_regs))old_sys_calls[CLONE])(regs);
+    res = ((int (*)(struct pt_regs))old_sys_calls[CLONE_CALL])(regs);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[CLONE].total_time += cycles;
+    th_info->stats[CLONE_CALL].total_time += cycles;
 
-    if(res < 0) th_info->stats[CLONE].error_calls++;
-    else th_info->stats[CLONE].ok_calls++;
+    if(res < 0) th_info->stats[CLONE_CALL].error_calls++;
+    else th_info->stats[CLONE_CALL].ok_calls++;
 
     module_put(THIS_MODULE);
 
@@ -186,11 +185,11 @@ static void __exit syscallsMonitor_exit(void) {
 EXPORT_SYMBOL(activate_monitor);
 void activate_monitor(int syscall) {
     if (syscall == ALL) {
-        sys_call_table[SYSCALL_OPEN] = new_sys_calls[OPEN];
-        sys_call_table[SYSCALL_WRITE] = new_sys_calls[WRITE];
-        sys_call_table[SYSCALL_LSEEK] = new_sys_calls[LSEEK];
-        sys_call_table[SYSCALL_CLOSE] = new_sys_calls[CLOSE];
-        sys_call_table[SYSCALL_CLONE] = new_sys_calls[CLONE];
+        sys_call_table[SYSCALL_OPEN] = new_sys_calls[OPEN_CALL];
+        sys_call_table[SYSCALL_CLOSE] = new_sys_calls[CLOSE_CALL];
+        sys_call_table[SYSCALL_WRITE] = new_sys_calls[WRITE_CALL];
+        sys_call_table[SYSCALL_LSEEK] = new_sys_calls[LSEEK_CALL];
+        sys_call_table[SYSCALL_CLONE] = new_sys_calls[CLONE_CALL];
     }
     else sys_call_table[syscall_pos_of[syscall]] = new_sys_calls[syscall];
 }
@@ -198,11 +197,11 @@ void activate_monitor(int syscall) {
 EXPORT_SYMBOL(deactivate_monitor);
 void deactivate_monitor(int syscall) {
     if (syscall == ALL) {
-        sys_call_table[SYSCALL_OPEN] = old_sys_calls[OPEN];
-        sys_call_table[SYSCALL_WRITE] = old_sys_calls[WRITE];
-        sys_call_table[SYSCALL_LSEEK] = old_sys_calls[LSEEK];
-        sys_call_table[SYSCALL_CLOSE] = old_sys_calls[CLOSE];
-        sys_call_table[SYSCALL_CLONE] = old_sys_calls[CLONE];
+        sys_call_table[SYSCALL_OPEN] = old_sys_calls[OPEN_CALL];
+        sys_call_table[SYSCALL_CLOSE] = old_sys_calls[CLOSE_CALL];
+        sys_call_table[SYSCALL_WRITE] = old_sys_calls[WRITE_CALL];
+        sys_call_table[SYSCALL_LSEEK] = old_sys_calls[LSEEK_CALL];
+        sys_call_table[SYSCALL_CLONE] = old_sys_calls[CLONE_CALL];
     }
     else sys_call_table[syscall_pos_of[syscall]] = old_sys_calls[syscall];
 }

@@ -2,11 +2,11 @@
 #ifndef __SYSCALLS_MON__
 #define __SYSCALLS_MON__
 
-#define OPEN 0
-#define CLOSE 1
-#define WRITE 2
-#define LSEEK 3
-#define CLONE 4
+#define OPEN_CALL 0
+#define CLOSE_CALL 1
+#define WRITE_CALL 2
+#define LSEEK_CALL 3
+#define CLONE_CALL 4
 
 #define ALL -1
 
