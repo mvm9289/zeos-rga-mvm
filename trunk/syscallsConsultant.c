@@ -58,18 +58,24 @@ ssize_t consultant_read(struct file *f, char __user *buffer, size_t s, loff_t *o
 
     res = copy_to_user(buffer, &th_info->stats[monitor_syscall], size);
 
-    return (ssize_t)res;
+    return (ssize_t)(size-res);
 }
 
 int consultant_ioctl(struct inode *i, struct file *f, unsigned int arg1, unsigned long arg2) {
     struct task_struct *task;
+    int process_pid;
+    int res;
 
     switch (arg1) {
         case SWITCH_PROCESS:
-            if(!arg2) actual_process = find_task_by_pid(first_pid);
-            else actual_process = find_task_by_pid(*((int *)arg2));
+            if((int *)arg2 == NULL) task = find_task_by_pid(first_pid);
+            else {
+                res = copy_from_user(&process_pid, (int *)arg2, sizeof(int));
+                task = find_task_by_pid(process_pid);
+            }
 
-            if (actual_process == NULL) return -ESRCH;
+            if (task == NULL) return -ESRCH;
+            else actual_process = task;
             break;
         case SWITCH_SYSCALL:
             monitor_syscall = (int)arg2;
@@ -98,7 +104,6 @@ int consultant_ioctl(struct inode *i, struct file *f, unsigned int arg1, unsigne
 }
 
 int consultant_release(struct inode *i, struct file *f) {
-    cdev_del(consultant_cdev);
     open = 0;
 
     return 0;
@@ -106,6 +111,7 @@ int consultant_release(struct inode *i, struct file *f) {
 
 /* Module Download */
 static void __exit syscallsConsultant_exit(void) {
+    cdev_del(consultant_cdev);
     unregister_chrdev_region(device, 1);
     
     printk(KERN_EMERG "\nSyscalls Consultant Module downloaded!\n\n");
