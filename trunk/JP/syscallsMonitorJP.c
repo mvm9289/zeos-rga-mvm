@@ -5,7 +5,7 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <linux/errno.h>
+#include <errno.h>
 
 #define PRINTFS 44
 
@@ -38,19 +38,19 @@ int main() {
     printf("Press ENTER to start tests.");
     fflush(stdout);
     read(0, NULL, 1);
-    printf("\nTests Runing...\n");
+    printf("\nTests Running...\n");
 
     printf("\nTEST 1: Open a non exist file with result OK.");
     fd1 = open("newfile", O_RDWR | O_CREAT | O_EXCL, 0777);
     if (fd1 == -1) {
-        printf("----->Result BAD\n");
+        printf("----->Execution BAD\n");
         perror(buffer);
         printf(buffer);
         good_writes++;
         bad_opens++;
     }
     else {
-        printf("----->Result OK\n");
+        printf("----->Execution OK\n");
         good_opens++;
     }
     
@@ -58,35 +58,35 @@ int main() {
     fd1 = open("newfile", O_RDWR, 0777);
     fd0 = fd1;
     if (fd1 == -1) {
-        printf("----->Result BAD\n");
+        printf("----->Execution BAD\n");
         perror(buffer);
         printf(buffer);
         good_writes++;
     }
     else {
-        printf("----->Result OK\n");
+        printf("----->Execution OK\n");
         good_opens++;
     }
 
     printf("\nTEST 3: Open an already exist file with result BAD.");
     fd1 = open("newfile", O_RDWR | O_CREAT | O_EXCL, 0777);
     if (fd1 == -1) {
-        printf("----->Result OK\n");
+        printf("----->Execution OK\n");
         bad_opens++;
     }
     else {
-        printf("----->Result BAD\n");
+        printf("----->Execution BAD\n");
         good_opens++;
     }
 
     printf("\nTEST 4: Open a non exist file with result BAD.");
     fd1 = open("newfile2", O_RDWR, 0777);
     if (fd1 == -1) {
-        printf("----->Result OK\n");
+        printf("----->Execution OK\n");
         bad_opens++;
     }
     else {
-        printf("----->Result BAD\n");
+        printf("----->Execution BAD\n");
         good_opens++;
     }
 
@@ -103,8 +103,8 @@ int main() {
         else good_closes++;
     }
     printf("\nTEST 5: Close an exist fd with result OK. (x5)");
-    if (bad_result) printf("----->Result BAD\n");
-    else printf("----->Result OK\n");
+    if (bad_result) printf("----->Execution BAD\n");
+    else printf("----->Execution OK\n");
     bad_result = 0;
 
     fd1 = -1;
@@ -117,8 +117,8 @@ int main() {
         else good_closes++;
     }
     printf("\nTEST 6: Close a non exist fd with result BAD.(x5)");
-    if (bad_result) printf("----->Result OK\n");
-    else printf("----->Result BAD\n");
+    if (bad_result) printf("----->Execution OK\n");
+    else printf("----->Execution BAD\n");
     bad_result = 0;
 
     for (i = 0; i < 5; i++) {
@@ -130,8 +130,8 @@ int main() {
         else good_writes++;
     }
     printf("\nTEST 7: Write a non exist fd with result BAD.(x5)");
-    if (bad_result) printf("----->Result OK\n");
-    else printf("----->Result BAD\n");
+    if (bad_result) printf("----->Execution OK\n");
+    else printf("----->Execution BAD\n");
     bad_result = 0;
 
     for (i = 0; i < 5; i++) {
@@ -146,8 +146,8 @@ int main() {
         else good_lseeks++;
     }
     printf("\nTEST 8: Lseek an exist fd with result OK.(x5)");
-    if (bad_result) printf("----->Result BAD\n");
-    else printf("----->Result OK\n");
+    if (bad_result) printf("----->Execution BAD\n");
+    else printf("----->Execution OK\n");
     bad_result = 0;
 
     for (i = 0; i < 5; i++) {
@@ -159,8 +159,8 @@ int main() {
         else good_lseeks++;
     }
     printf("\nTEST 9: Lseek a non exist fd with result BAD.(x5)");
-    if (bad_result) printf("----->Result OK\n");
-    else printf("----->Result BAD\n");
+    if (bad_result) printf("----->Execution OK\n");
+    else printf("----->Execution BAD\n");
     bad_result = 0;
 
     for (i = 0; i < 5; i++) {
@@ -175,8 +175,8 @@ int main() {
         else good_clones++;
     }
     printf("\nTEST 10: Clone with result OK.(x5)");
-    if (bad_result) printf("----->Result BAD\n");
-    else printf("----->Result OK\n");
+    if (bad_result) printf("----->Execution BAD\n");
+    else printf("----->Execution OK\n");
     bad_result = 0;
 
     for (i = 0; i < 5; i++) {
@@ -188,8 +188,8 @@ int main() {
         else good_clones++;
     }
     printf("\nTEST 11: Clone with result BAD.(x5)");
-    if (bad_result) printf("----->Result OK\n");
-    else printf("----->Result BAD\n");
+    if (bad_result) printf("----->Execution OK\n");
+    else printf("----->Execution BAD\n");
     bad_result = 0;
 
     unlink("newfile");

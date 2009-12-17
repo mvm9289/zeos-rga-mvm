@@ -38,7 +38,7 @@ static int __init syscallsMonitor_init(void) {
     new_sys_calls[CLONE_CALL] = (void *) new_sys_clone;
 
     activate_monitor(-1);
-    printk(KERN_EMERG "Syscalls Monitor Module loaded!\n\n");
+    printk(KERN_EMERG "\nSyscalls Monitor Module loaded!\n\n");
 
     return 0;
 }
@@ -56,14 +56,14 @@ long new_sys_open (const char __user *filename, int flags, int mode) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[OPEN_CALL].total_calls++;
     cycles = proso_get_cycles();
     res = ((long (*)(const char __user *, int, int))old_sys_calls[OPEN_CALL])(filename, flags, mode);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[OPEN_CALL].total_time += cycles;
 
+    th_info->stats[OPEN_CALL].total_calls++;
     if(res < 0) th_info->stats[OPEN_CALL].error_calls++;
     else th_info->stats[OPEN_CALL].ok_calls++;
+    th_info->stats[OPEN_CALL].total_time += cycles;
 
     module_put(THIS_MODULE);
 
@@ -82,14 +82,14 @@ long new_sys_close(unsigned int fd) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[CLOSE_CALL].total_calls++;
     cycles = proso_get_cycles();
     res = ((long (*)(unsigned int))old_sys_calls[CLOSE_CALL])(fd);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[CLOSE_CALL].total_time += cycles;
 
+    th_info->stats[CLOSE_CALL].total_calls++;
     if(res < 0) th_info->stats[CLOSE_CALL].error_calls++;
     else th_info->stats[CLOSE_CALL].ok_calls++;
+    th_info->stats[CLOSE_CALL].total_time += cycles;
 
     module_put(THIS_MODULE);
 
@@ -108,14 +108,14 @@ ssize_t new_sys_write(unsigned int fd, const char __user * buf, size_t count) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[WRITE_CALL].total_calls++;
     cycles = proso_get_cycles();
     res = ((ssize_t (*)(unsigned int, const char __user *, size_t))old_sys_calls[WRITE_CALL])(fd, buf, count);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[WRITE_CALL].total_time += cycles;
 
+    th_info->stats[WRITE_CALL].total_calls++;
     if(res < 0) th_info->stats[WRITE_CALL].error_calls++;
     else th_info->stats[WRITE_CALL].ok_calls++;
+    th_info->stats[WRITE_CALL].total_time += cycles;
 
     module_put(THIS_MODULE);
 
@@ -134,14 +134,14 @@ off_t new_sys_lseek(unsigned int fd, off_t offset, unsigned int origin) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[LSEEK_CALL].total_calls++;
     cycles = proso_get_cycles();
     res = ((off_t (*)(unsigned int, off_t, unsigned int))old_sys_calls[LSEEK_CALL])(fd, offset, origin);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[LSEEK_CALL].total_time += cycles;
 
+    th_info->stats[LSEEK_CALL].total_calls++;
     if(res < 0) th_info->stats[LSEEK_CALL].error_calls++;
     else th_info->stats[LSEEK_CALL].ok_calls++;
+    th_info->stats[LSEEK_CALL].total_time += cycles;
 
     module_put(THIS_MODULE);
 
@@ -160,14 +160,14 @@ int new_sys_clone(struct pt_regs regs) {
         th_info->pid = current->pid;
     }
 
-    th_info->stats[CLONE_CALL].total_calls++;
     cycles = proso_get_cycles();
     res = ((int (*)(struct pt_regs))old_sys_calls[CLONE_CALL])(regs);
     cycles = proso_get_cycles() - cycles;
-    th_info->stats[CLONE_CALL].total_time += cycles;
 
+    th_info->stats[CLONE_CALL].total_calls++;
     if(res < 0) th_info->stats[CLONE_CALL].error_calls++;
     else th_info->stats[CLONE_CALL].ok_calls++;
+    th_info->stats[CLONE_CALL].total_time += cycles;
 
     module_put(THIS_MODULE);
 

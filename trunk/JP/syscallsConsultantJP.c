@@ -5,8 +5,7 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <linux/errno.h>
-
+#include <errno.h>
 #include "../include/syscallsmon.h"  
 
 
@@ -15,253 +14,206 @@ int main() {
     char buffer[256];
     struct t_stats stats;
     int pid;
-    int res;
-    int res2;
-    int fd;
-    int status = -1;
+    int res0;
+    int res1;
+    int fdnull;
+    int fd0;
+    int fd1;
+    int status;
 
 
     printf("\n\nTESTS FOR SYSCALLS CONSULTANT MODULE\n\n");
-    printf("My PID is %d.\n\n", getpid());
     printf("Press ENTER to start tests.");
     fflush(stdout);
     read(0, NULL, 1);
-    printf("\nTests Runing...\n");
+    printf("\nTests Running...\n");
 
-    printf("Opening the device: ");
-    fd=open("/dev/consultant",O_RDONLY, 0777);
-    if(fd<0){
-        printf("---> Error abriendo el dispositivo\n");
+    fdnull = open("/dev/null", O_WRONLY, 0777);
+
+    printf("\nTEST 1: Open the device.");
+    fd0 = open("/dev/consultant", O_RDONLY, 0777);
+    if(fd0 < 0){
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not open the device.");
+        exit(0);
+    }
+    printf("----->Result OK\n");
+
+    printf("\nTEST 2: Open the device again checking that's not permitted.");
+    fd1 = open("/dev/consultant", O_RDONLY, 0777);
+    if(fd1 < 0) printf("----->Result OK\n");
+    else {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can open the device.\n\n");
         exit(0);
     }
 
-    printf("---> OK\n");
+    printf("\nTEST 3: Disable monitorization.");
+    res0 = ioctl(fd0, DEACTIVATE_MONITOR, ALL);
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not disable monitorization.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("-Abrir el dispositivo otra vez: ");
-    res=open("/dev/consultant",O_RDONLY,0777);
-    if(res<0) printf("Error abriendo el dispositivo------>OK\n");
+    printf("\nTEST 4: Reset statistics of all processes.");
+    res0 = ioctl(fd0, RESET_ALL, 0);
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not reset statistics of all processes.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("Enable monitorization: ");
-    res=ioctl(fd,4,ALL);
-    if(res<0) printf("---> Error activar monitorizacion\n");
-    else printf("---> OK\n");
+    printf("\nTEST 5: Enable OPEN monitorization and select it.");
+    res0 = ioctl(fd0, ACTIVATE_MONITOR, OPEN_CALL);
+    res1 = ioctl(fd0, SWITCH_SYSCALL, OPEN_CALL);
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not activate the monitorization.\n\n");
+        exit(0);
+    }
+    else if(res1 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not switch the syscall.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
+    printf("\nTEST 6: A right OPEN call.");
+    fd1 = open("newfile", O_RDWR | O_CREAT, 0777);
+    read(fd0, &stats, sizeof(struct t_stats));
+    if(fd1 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not create a file.\n\n");
+        exit(0);
+    }
+    else if(stats.total_calls != 1 || stats.ok_calls != 1 || stats.error_calls != 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Stats do not match the results.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("A right OPEN call + a right CLOSE call:\n");
-    res = open("newFile", O_RDWR | O_CREAT, 0777);
-    if(res > 0) printf("OK ---> OPEN\n");
-    res2 = close(res);
-    if(res2 > 0) printf("OK ---> CLOSE\n");
+    printf("\nTEST 7: Enable CLOSE monitorization and select it.");
+    res0 = ioctl(fd0, ACTIVATE_MONITOR, CLOSE_CALL);
+    res1 = ioctl(fd0, SWITCH_SYSCALL, CLOSE_CALL);
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not activate the monitorization.\n\n");
+        exit(0);
+    }
+    else if(res1 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not switch the syscall.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("Reading OPEN statistics: ");
-    read(fd,&stats,sizeof(struct t_stats));
-    printf("----> OK\nCall statistics:\n");
-    printf("OPEN:");
-    printf("        Num calls: %d\n",stats.total_calls);
-    printf("        Ok calls: %d\n",stats.ok_calls);
-    printf("        Bad calls: %d\n",stats.error_calls);
-    printf("        Total time: %d\n",stats.total_time);
+    printf("\nTEST 8: A right CLOSE call.");
+    res0 = close(fd1);
+    read(fd0, &stats, sizeof(struct t_stats));
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not close the fd.\n\n");
+        exit(0);
+    }
+    else if(stats.total_calls != 1 || stats.ok_calls != 1 || stats.error_calls != 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Stats do not match the results.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("Disable WRITE call monitorization: ");
-    res=ioctl(fd,5,WRITE_CALL);
-    if(res<0) printf("---> Error %d\n", res);    
-    else printf("---> OK\n");
+    unlink("newfile");
 
-    printf("Reset statistics of current process: ");
-    res=ioctl(fd,2,0);
-    if(res<0) printf("---> ioctl error\n");
-    else printf("---> OK\n");
+    printf("\nTEST 9: Reset statistics of current process.");
+    res0 = ioctl(fd0, RESET, 0);
+    read(fd0, &stats, sizeof(struct t_stats));
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not reset the statistics of current process\n\n");
+        exit(0);
+    }
+    else if(stats.total_calls != 0 || stats.ok_calls != 0 || stats.error_calls != 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Stats do not match the results.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("Reading OPEN statistics again checking the reset: ");
-    read(fd,&stats,sizeof(struct t_stats));
-    printf("----> Read OK\nCall statistics:\n");
-    printf("OPEN:");
-    printf("        Num calls: %d\n",stats.total_calls);
-    printf("        Ok calls: %d\n",stats.ok_calls);
-    printf("        Bad calls: %d\n",stats.error_calls);
-    printf("        Total time: %d\n",stats.total_time);
+    printf("\nTEST 10: Enable WRITE monitorization and select it.");
+    res0 = ioctl(fd0, ACTIVATE_MONITOR, WRITE_CALL);
+    res1 = ioctl(fd0, SWITCH_SYSCALL, WRITE_CALL);
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not activate the monitorization.\n\n");
+        exit(0);
+    }
+    else if(res1 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not switch the syscall.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("Changing syscall to WRITE (enabling and desabling monitorization to avoid printfs): ");
-    res = ioctl(fd,1,WRITE_CALL);
-    if(res < 0) printf("Error changing the syscall to monitorize");    
+    printf("\nTEST 11: Three right WRITE calls.");
+    write(fdnull, "WRITE", 5);
+    write(fdnull, "WRITE", 5);
+    write(fdnull, "WRITE", 5);
+    read(fd0, &stats, sizeof(struct t_stats));
+    if(stats.total_calls != 5 || stats.ok_calls != 5 || stats.error_calls != 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Stats do not match the results.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
-    printf("Three right WRITE calls: ");
-
-    printf("Enable WRITE call monitorization: ---> OK");
-    res=ioctl(fd,4,WRITE_CALL);
-
-    write(1,"Writing...\n",11);
-    write(1,"Writing...\n",11);
-    write(1,"Writing...\n",11);
-
-    res=ioctl(fd,5,WRITE_CALL);
-    printf("Disable WRITE call monitorization: ");
-    if(res<0) printf("---> Error %d\n", res);    
-    else printf("---> OK\n");
-   
-    printf("Reading WRITE statistics: ");
-    read(fd,&stats,sizeof(struct t_stats));
-    printf("----> OK\nCall statistics:\n");
-    printf("WRITE:");
-    printf("        Num calls: %d\n",stats.total_calls);
-    printf("        Ok calls: %d\n",stats.ok_calls);
-    printf("        Bad calls: %d\n",stats.error_calls);
-    printf("        Total time: %d\n",stats.total_time);
-    
-
+    printf("\nTEST 12: Create a child process that do three wrong OPEN calls.");
+    fflush(stdout);
     pid = fork();
     if(pid == 0) {
-
-        printf("Changing the process to a new process: ");
         pid = getpid();
-        res = ioctl(fd,0,&pid);
-        if(res < 0) printf("---> Error\n");
-        else {    
-            printf("Three right WRITE calls:\n");
-            printf("Enable WRITE call monitorization: ---> OK");
-            res=ioctl(fd,4,WRITE_CALL);
-
-            write(1,"Writing...\n",11);
-            write(1,"Writing...\n",11);
-            write(1,"Writing...\n",11);
-
-            res=ioctl(fd,5,WRITE_CALL);
-            printf("Disable WRITE call monitorization: ");
-            if(res<0) printf("---> Error %d\n", res);    
-            else printf("---> OK\n");
-
-            printf("Reading WRITE statistics of the new process: ");
-            read(fd,&stats,sizeof(struct t_stats));
-            printf("----> OK\nCall statistics:\n");
-            printf("WRITE:");
-            printf("        Num calls: %d\n",stats.total_calls);
-            printf("        Ok calls: %d\n",stats.ok_calls);
-            printf("        Bad calls: %d\n",stats.error_calls);
-            printf("        Total time: %d\n",stats.total_time);
-
-            printf("Reset all process statistics: ");
-            res=ioctl(fd,3,0);
-            if(res<0) printf("---> ioctl error\n");
-            else printf("---> OK\n");
-
-            printf("Reading WRITE statistics of the new process again checking the general reset: ");
-            read(fd,&stats,sizeof(struct t_stats));
-            printf("----> OK\nCall statistics:\n");
-            printf("WRITE:");
-            printf("        Num calls: %d\n",stats.total_calls);
-            printf("        Ok calls: %d\n",stats.ok_calls);
-            printf("        Bad calls: %d\n",stats.error_calls);
-            printf("        Total time: %d\n",stats.total_time);
-
-            printf("Son process dead.\n");
+        fd1 = open("newfile", O_RDWR, 0777);
+        fd1 = open("newfile", O_RDWR, 0777);
+        fd1 = open("newfile", O_RDWR, 0777);
+        res0 = ioctl(fd0, SWITCH_PROCESS, &pid);
+        res1 = ioctl(fd0, SWITCH_SYSCALL, OPEN_CALL);
+        read(fd0, &stats, sizeof(struct t_stats));
+        if(res0 < 0) {
+            printf("----->Result BAD\n");
+            printf("ERROR: Can not switch the process.\n\n");
             exit(0);
-        } 
-    } 
-    
-    wait(&status);
-
-    printf("Changing the process to the first process: ");
-    res = ioctl(fd,0,NULL);
-    if(res < 0) printf("---> Error\n");
-    else {
-        printf("Reading WRITE statistics of the first process again checking the general reset: ");
-        read(fd,&stats,sizeof(struct t_stats));
-        printf("----> OK\nCall statistics:\n");
-        printf("WRITE:");
-        printf("        Num calls: %d\n",stats.total_calls);
-        printf("        Ok calls: %d\n",stats.ok_calls);
-        printf("        Bad calls: %d\n",stats.error_calls);
-        printf("        Total time: %d\n",stats.total_time);
-    }         
-
-            
-        
-
-
-    // ahora iba a hacer un fork haciendo unos writes, reseteando todo y volviendo a mostrar los writes del hijo, muriendo, sacando al padre del wait y mostrando de nuevo los writes para ver que se han reseteado todos... después ya no se, no había pensado tanto xDD
-
-    printf("Changing syscall to Close: ");
-    res = ioctl(fd,1,CLOSE_CALL);
-    if(res < 0) printf("Error changing the syscall to monitorize");
-    
-    printf("Hacemos 1 close incorrecto\n");
-    close(-1);
-
-    printf("Lectura estadísticas Close: ");
-    read(fd,&stats,sizeof(struct t_stats));
-    printf("OK\nEstadísticas close:\n");
-    printf("CLOSE:");
-    printf("        Numero entrades: %d\n",stats.total_calls);
-    printf("        Sortides correctes: %d\n",stats.ok_calls);
-    printf("        Sortides incorrectes: %d\n",stats.error_calls);
-    printf("        Tiempo total: %d\n\n",stats.total_time);
-
-
-    printf("Hacemos fork y cambiamos el proceso\n");
-    pid = fork();
-    if(pid == 0){
-        pid = getpid();
-        res = ioctl(fd,0,&pid);
-        if(res < 0)printf("Error cambio de proceso\n");
-
-        printf("Hacemos un close incorrecto\n");
-        close(-1);
-
-        printf("Lectura estadísticas Close: ");
-        read(fd,&stats,sizeof(struct t_stats));
-        printf("OK\nEstadísticas close:\n");
-        printf("Close:");
-        printf("        Numero entrades: %d\n",stats.total_calls);
-        printf("        Sortides correctes: %d\n",stats.ok_calls);   
-        printf("        Sortides incorrectes: %d\n",stats.error_calls);
-        printf("        Tiempo total: %d\n\n",stats.total_time);
-
+        }
+        else if(res1 < 0) {
+            printf("----->Result BAD\n");
+            printf("ERROR: Can not switch the syscall.\n\n");
+            exit(0);
+        }
+        if(stats.total_calls != 3 || stats.ok_calls != 0 || stats.error_calls != 3) {
+            printf("----->Result BAD\n");
+            printf("ERROR: Stats do not match the results.\n\n");
+        }
+        else printf("----->Result OK\n");
         exit(0);
     }
     wait(&status);
-    printf("Volvemos a cambiar el proceso al inicial: ");
-    res=ioctl(fd,0,&pid);
-    if(res>=0) printf("OK\n");
-    else printf("Error restaurando el proceso padre\n");
-    
-    printf("Changing syscall to Write: ");
-    res = ioctl(fd,1,WRITE_CALL);
-    if(res < 0) printf("Error changing the syscall to monitorize");
-    
-    printf("Hacemos 3 writes.\n");
-    write(1,"write:\n",7);
-    write(1,"write:\n",7);
-    write(1,"write:\n",7);
 
-    printf("Lectura estadísticas Write: ");
-    read(fd,&stats,sizeof(struct t_stats));
-    printf("OK\nEstadísticas write:\n");
-    printf("write:");
-    printf("        Numero entrades: %d\n",stats.total_calls);
-    printf("        Sortides correctes: %d\n",stats.ok_calls);   
-    printf("        Sortides incorrectes: %d\n",stats.error_calls);
-    printf("        Tiempo total: %d\n\n",stats.total_time);
+    printf("\nTEST 13: Change the process monitorization to the fisrt process.");
+    res0 = ioctl(fd0, SWITCH_PROCESS, NULL);
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not switch the process.\n\n");
+        exit(0);
+    }
+    else printf("----->Result OK\n");
 
+    printf("\nALL TESTS PASSED\n");
 
-    printf("Reset estadísticas proceso actual: ");
-    res=ioctl(fd,2,0);
-    if(res<0) printf("Error de ioctl\n");
-    else printf("OK\n");
-
-    printf("Lectura estadísticas Write después del reset: ");
-    read(fd,&stats,sizeof(struct t_stats));
-    printf("OK\nEstadísticas write:\n");
-    printf("write:");
-    printf("        Numero entrades: %d\n",stats.total_calls);
-    printf("        Sortides correctes: %d\n",stats.ok_calls);   
-    printf("        Sortides incorrectes: %d\n",stats.error_calls);
-    printf("        Tiempo total: %d\n\n",stats.total_time);
-
-    close(fd);
-
-    printf("FIN JUEGO DE PRUEBAS");
-
+    close(fd0);
     exit(0);
+    // ahora iba a hacer un fork haciendo unos writes, reseteando todo y volviendo a mostrar los writes del hijo, muriendo, sacando al padre del wait y mostrando de nuevo los writes para ver que se han reseteado todos... después ya no se, no había pensado tanto xDD
 }
 
 
