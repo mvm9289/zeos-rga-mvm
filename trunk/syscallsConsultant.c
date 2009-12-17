@@ -35,16 +35,16 @@ static int __init syscallsConsultant_init(void) {
 
 /* Module Operations */
 int consultant_open(struct inode *i, struct file *f) {
-printk(KERN_EMERG "HOLA DOLA %d", current->pid);
     if (current->uid != 0) return -EPERM;
 
     if (open) return -EBUSY;
     open = 1;
 
     first_pid = current->pid;
-    actual_process = (struct task_struct *)current;
+    actual_process = find_task_by_pid(current->pid);
     monitor_syscall = OPEN_CALL;
 
+printk(KERN_EMERG "HOLA DOLA %d", current->pid);
     return 0;
 }
 
@@ -58,6 +58,12 @@ ssize_t consultant_read(struct file *f, char __user *buffer, size_t s, loff_t *o
     if (s > sizeof(struct t_stats)) size = sizeof(struct t_stats);
 
     res = copy_to_user(buffer, &th_info->stats[monitor_syscall], size);
+
+printk(KERN_EMERG "entradas: %d\n", th_info->stats[monitor_syscall].total_calls);
+printk(KERN_EMERG "entradas good: %d\n", th_info->stats[monitor_syscall].ok_calls);
+printk(KERN_EMERG "entradas bad: %d\n", th_info->stats[monitor_syscall].error_calls);
+printk(KERN_EMERG "time: %lld\n", th_info->stats[monitor_syscall].total_time);
+printk(KERN_EMERG "pid: %d\n", th_info->stats[monitor_syscall].pid);
 
     return (ssize_t)res;
 }

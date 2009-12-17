@@ -12,5 +12,6 @@ struct t_info {
     int num_sortides_ok;
     int num_sortides_error;
     unsigned long long durada_total;
+    int pid;
 };
 
