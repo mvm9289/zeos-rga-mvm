@@ -35,6 +35,7 @@ static int __init syscallsConsultant_init(void) {
 
 /* Module Operations */
 int consultant_open(struct inode *i, struct file *f) {
+printk(KERN_EMERG "HOLA DOLA %d", current->pid);
     if (current->uid != 0) return -EPERM;
 
     if (open) return -EBUSY;
