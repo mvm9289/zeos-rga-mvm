@@ -56,7 +56,7 @@ int main() {
     res = open("newFile", O_RDWR | O_CREAT, 0777);
     if(res > 0) printf("OK ---> OPEN\n");
     res2 = close(res);
-    if(res2 > 0) printf("OK ---> CLOSE\n")
+    if(res2 > 0) printf("OK ---> CLOSE\n");
 
     printf("Reading OPEN statistics: ");
     read(fd,&stats,sizeof(struct t_info));
@@ -69,8 +69,8 @@ int main() {
     //printf("        PID: %d\n\n", stats.pid);
 
     printf("Disable WRITE call monitorization: ");
-    ioct=ioctl(fd,5,WRITE_CALL);
-    if(ioct<0) printf("---> Error %d\n", ioct);    
+    res=ioctl(fd,5,WRITE_CALL);
+    if(res<0) printf("---> Error %d\n", res);    
     else printf("---> OK\n");
 
     printf("Reset statistics of current process: ");
@@ -95,20 +95,20 @@ int main() {
     printf("Three right WRITE calls: ");
 
     printf("Enable WRITE call monitorization: ---> OK");
-    ioct=ioctl(fd,4,WRITE_CALL);
+    res=ioctl(fd,4,WRITE_CALL);
 
     write(1,"Writing...\n",11);
     write(1,"Writing...\n",11);
     write(1,"Writing...\n",11);
 
-    ioct=ioctl(fd,5,WRITE_CALL);
+    res=ioctl(fd,5,WRITE_CALL);
     printf("Disable WRITE call monitorization: ");
-    if(ioct<0) printf("---> Error %d\n", ioct);    
+    if(res<0) printf("---> Error %d\n", res);    
     else printf("---> OK\n");
    
-    printf("Reading WRITE statistics again checking the reset: ");
+    printf("Reading WRITE statistics: ");
     read(fd,&stats,sizeof(struct t_info));
-    printf("----> Read OK\nCall statistics:\n");
+    printf("----> OK\nCall statistics:\n");
     printf("WRITE:");
     printf("        Num calls: %d\n",stats.num_entrades);
     printf("        Ok calls: %d\n",stats.num_sortides_ok);
@@ -116,6 +116,75 @@ int main() {
     printf("        Total time: %d\n",stats.durada_total);
     //printf("        PID: %d\n\n", stats.pid);
     
+
+    pid = fork();
+    if(pid == 0) {
+
+        printf("Changing the process to a new process: ");
+        pid = getpid();
+        res = ioctl(fd,0,&pid);
+        if(res < 0) printf("---> Error\n");
+        else {    
+            printf("Three right WRITE calls:\n");
+            printf("Enable WRITE call monitorization: ---> OK");
+            res=ioctl(fd,4,WRITE_CALL);
+
+            write(1,"Writing...\n",11);
+            write(1,"Writing...\n",11);
+            write(1,"Writing...\n",11);
+
+            res=ioctl(fd,5,WRITE_CALL);
+            printf("Disable WRITE call monitorization: ");
+            if(res<0) printf("---> Error %d\n", res);    
+            else printf("---> OK\n");
+
+            printf("Reading WRITE statistics of the new process: ");
+            read(fd,&stats,sizeof(struct t_info));
+            printf("----> OK\nCall statistics:\n");
+            printf("WRITE:");
+            printf("        Num calls: %d\n",stats.num_entrades);
+            printf("        Ok calls: %d\n",stats.num_sortides_ok);
+            printf("        Bad calls: %d\n",stats.num_sortides_error);
+            printf("        Total time: %d\n",stats.durada_total);
+
+            printf("Reset all process statistics: ");
+            res=ioctl(fd,3,0);
+            if(res<0) printf("---> ioctl error\n");
+            else printf("---> OK\n");
+
+            printf("Reading WRITE statistics of the new process again checking the general reset: ");
+            read(fd,&stats,sizeof(struct t_info));
+            printf("----> OK\nCall statistics:\n");
+            printf("WRITE:");
+            printf("        Num calls: %d\n",stats.num_entrades);
+            printf("        Ok calls: %d\n",stats.num_sortides_ok);
+            printf("        Bad calls: %d\n",stats.num_sortides_error);
+            printf("        Total time: %d\n",stats.durada_total);
+
+            printf("Son process dead.\n");
+            exit(0);
+        } 
+    } 
+    
+    wait(&status);
+
+    printf("Changing the process to the first process: ");
+    res = ioctl(fd,0,NULL);
+    if(res < 0) printf("---> Error\n");
+    else {
+        printf("Reading WRITE statistics of the first process again checking the general reset: ");
+        read(fd,&stats,sizeof(struct t_info));
+        printf("----> OK\nCall statistics:\n");
+        printf("WRITE:");
+        printf("        Num calls: %d\n",stats.num_entrades);
+        printf("        Ok calls: %d\n",stats.num_sortides_ok);
+        printf("        Bad calls: %d\n",stats.num_sortides_error);
+        printf("        Total time: %d\n",stats.durada_total);
+    }         
+
+            
+        
+
 
     // ahora iba a hacer un fork haciendo unos writes, reseteando todo y volviendo a mostrar los writes del hijo, muriendo, sacando al padre del wait y mostrando de nuevo los writes para ver que se han reseteado todos... después ya no se, no había pensado tanto xDD
 
