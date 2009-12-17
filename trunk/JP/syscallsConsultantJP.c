@@ -7,13 +7,13 @@
 #include <stdlib.h>
 #include <linux/errno.h>
 
-#include "syscallsConsultantJP.h"  
+#include "../include/syscallsmon.h"  
 
 
 int main() {
 
     char buffer[256];
-    struct t_info stats;
+    struct t_stats stats;
     int pid;
     int res;
     int res2;
@@ -32,16 +32,14 @@ int main() {
     fd=open("/dev/consultant",O_RDONLY, 0777);
     if(fd<0){
         printf("---> Error abriendo el dispositivo\n");
-	perror(buffer);
-	printf(buffer);
         exit(0);
     }
 
     printf("---> OK\n");
 
-    /*printf("-Abrir el dispositivo otra vez: ");
+    printf("-Abrir el dispositivo otra vez: ");
     res=open("/dev/consultant",O_RDONLY,0777);
-    if(res<0) printf("Error abriendo el dispositivo------>OK\n");*/
+    if(res<0) printf("Error abriendo el dispositivo------>OK\n");
 
     printf("Enable monitorization: ");
     res=ioctl(fd,4,ALL);
@@ -49,9 +47,6 @@ int main() {
     else printf("---> OK\n");
 
 
-    /*printf("Hacemos 1 Open incorrecto\n");
-    open("hola.txt", O_RDWR, 0777);*/
-    
     printf("A right OPEN call + a right CLOSE call:\n");
     res = open("newFile", O_RDWR | O_CREAT, 0777);
     if(res > 0) printf("OK ---> OPEN\n");
@@ -59,14 +54,13 @@ int main() {
     if(res2 > 0) printf("OK ---> CLOSE\n");
 
     printf("Reading OPEN statistics: ");
-    read(fd,&stats,sizeof(struct t_info));
+    read(fd,&stats,sizeof(struct t_stats));
     printf("----> OK\nCall statistics:\n");
     printf("OPEN:");
-    printf("        Num calls: %d\n",stats.num_entrades);
-    printf("        Ok calls: %d\n",stats.num_sortides_ok);
-    printf("        Bad calls: %d\n",stats.num_sortides_error);
-    printf("        Total time: %d\n",stats.durada_total);
-    //printf("        PID: %d\n\n", stats.pid);
+    printf("        Num calls: %d\n",stats.total_calls);
+    printf("        Ok calls: %d\n",stats.ok_calls);
+    printf("        Bad calls: %d\n",stats.error_calls);
+    printf("        Total time: %d\n",stats.total_time);
 
     printf("Disable WRITE call monitorization: ");
     res=ioctl(fd,5,WRITE_CALL);
@@ -79,14 +73,13 @@ int main() {
     else printf("---> OK\n");
 
     printf("Reading OPEN statistics again checking the reset: ");
-    read(fd,&stats,sizeof(struct t_info));
+    read(fd,&stats,sizeof(struct t_stats));
     printf("----> Read OK\nCall statistics:\n");
     printf("OPEN:");
-    printf("        Num calls: %d\n",stats.num_entrades);
-    printf("        Ok calls: %d\n",stats.num_sortides_ok);
-    printf("        Bad calls: %d\n",stats.num_sortides_error);
-    printf("        Total time: %d\n",stats.durada_total);
-   //printf("        PID: %d\n\n", stats.pid);
+    printf("        Num calls: %d\n",stats.total_calls);
+    printf("        Ok calls: %d\n",stats.ok_calls);
+    printf("        Bad calls: %d\n",stats.error_calls);
+    printf("        Total time: %d\n",stats.total_time);
 
     printf("Changing syscall to WRITE (enabling and desabling monitorization to avoid printfs): ");
     res = ioctl(fd,1,WRITE_CALL);
@@ -107,14 +100,13 @@ int main() {
     else printf("---> OK\n");
    
     printf("Reading WRITE statistics: ");
-    read(fd,&stats,sizeof(struct t_info));
+    read(fd,&stats,sizeof(struct t_stats));
     printf("----> OK\nCall statistics:\n");
     printf("WRITE:");
-    printf("        Num calls: %d\n",stats.num_entrades);
-    printf("        Ok calls: %d\n",stats.num_sortides_ok);
-    printf("        Bad calls: %d\n",stats.num_sortides_error);
-    printf("        Total time: %d\n",stats.durada_total);
-    //printf("        PID: %d\n\n", stats.pid);
+    printf("        Num calls: %d\n",stats.total_calls);
+    printf("        Ok calls: %d\n",stats.ok_calls);
+    printf("        Bad calls: %d\n",stats.error_calls);
+    printf("        Total time: %d\n",stats.total_time);
     
 
     pid = fork();
@@ -139,13 +131,13 @@ int main() {
             else printf("---> OK\n");
 
             printf("Reading WRITE statistics of the new process: ");
-            read(fd,&stats,sizeof(struct t_info));
+            read(fd,&stats,sizeof(struct t_stats));
             printf("----> OK\nCall statistics:\n");
             printf("WRITE:");
-            printf("        Num calls: %d\n",stats.num_entrades);
-            printf("        Ok calls: %d\n",stats.num_sortides_ok);
-            printf("        Bad calls: %d\n",stats.num_sortides_error);
-            printf("        Total time: %d\n",stats.durada_total);
+            printf("        Num calls: %d\n",stats.total_calls);
+            printf("        Ok calls: %d\n",stats.ok_calls);
+            printf("        Bad calls: %d\n",stats.error_calls);
+            printf("        Total time: %d\n",stats.total_time);
 
             printf("Reset all process statistics: ");
             res=ioctl(fd,3,0);
@@ -153,13 +145,13 @@ int main() {
             else printf("---> OK\n");
 
             printf("Reading WRITE statistics of the new process again checking the general reset: ");
-            read(fd,&stats,sizeof(struct t_info));
+            read(fd,&stats,sizeof(struct t_stats));
             printf("----> OK\nCall statistics:\n");
             printf("WRITE:");
-            printf("        Num calls: %d\n",stats.num_entrades);
-            printf("        Ok calls: %d\n",stats.num_sortides_ok);
-            printf("        Bad calls: %d\n",stats.num_sortides_error);
-            printf("        Total time: %d\n",stats.durada_total);
+            printf("        Num calls: %d\n",stats.total_calls);
+            printf("        Ok calls: %d\n",stats.ok_calls);
+            printf("        Bad calls: %d\n",stats.error_calls);
+            printf("        Total time: %d\n",stats.total_time);
 
             printf("Son process dead.\n");
             exit(0);
@@ -173,13 +165,13 @@ int main() {
     if(res < 0) printf("---> Error\n");
     else {
         printf("Reading WRITE statistics of the first process again checking the general reset: ");
-        read(fd,&stats,sizeof(struct t_info));
+        read(fd,&stats,sizeof(struct t_stats));
         printf("----> OK\nCall statistics:\n");
         printf("WRITE:");
-        printf("        Num calls: %d\n",stats.num_entrades);
-        printf("        Ok calls: %d\n",stats.num_sortides_ok);
-        printf("        Bad calls: %d\n",stats.num_sortides_error);
-        printf("        Total time: %d\n",stats.durada_total);
+        printf("        Num calls: %d\n",stats.total_calls);
+        printf("        Ok calls: %d\n",stats.ok_calls);
+        printf("        Bad calls: %d\n",stats.error_calls);
+        printf("        Total time: %d\n",stats.total_time);
     }         
 
             
@@ -188,12 +180,7 @@ int main() {
 
     // ahora iba a hacer un fork haciendo unos writes, reseteando todo y volviendo a mostrar los writes del hijo, muriendo, sacando al padre del wait y mostrando de nuevo los writes para ver que se han reseteado todos... después ya no se, no había pensado tanto xDD
 
-
-
-close(fd);
-unlink("newFile");
-while(1);
-    /*printf("Changing syscall to Close: ");
+    printf("Changing syscall to Close: ");
     res = ioctl(fd,1,CLOSE_CALL);
     if(res < 0) printf("Error changing the syscall to monitorize");
     
@@ -201,13 +188,13 @@ while(1);
     close(-1);
 
     printf("Lectura estadísticas Close: ");
-    read(fd,&stats,sizeof(struct t_info));
+    read(fd,&stats,sizeof(struct t_stats));
     printf("OK\nEstadísticas close:\n");
     printf("CLOSE:");
-    printf("        Numero entrades: %d\n",stats.num_entrades);
-    printf("        Sortides correctes: %d\n",stats.num_sortides_ok);
-    printf("        Sortides incorrectes: %d\n",stats.num_sortides_error);
-    printf("        Tiempo total: %d\n\n",stats.durada_total);
+    printf("        Numero entrades: %d\n",stats.total_calls);
+    printf("        Sortides correctes: %d\n",stats.ok_calls);
+    printf("        Sortides incorrectes: %d\n",stats.error_calls);
+    printf("        Tiempo total: %d\n\n",stats.total_time);
 
 
     printf("Hacemos fork y cambiamos el proceso\n");
@@ -221,13 +208,13 @@ while(1);
         close(-1);
 
         printf("Lectura estadísticas Close: ");
-        read(fd,&stats,sizeof(struct t_info));
+        read(fd,&stats,sizeof(struct t_stats));
         printf("OK\nEstadísticas close:\n");
         printf("Close:");
-        printf("        Numero entrades: %d\n",stats.num_entrades);
-        printf("        Sortides correctes: %d\n",stats.num_sortides_ok);   
-        printf("        Sortides incorrectes: %d\n",stats.num_sortides_error);
-        printf("        Tiempo total: %d\n\n",stats.durada_total);
+        printf("        Numero entrades: %d\n",stats.total_calls);
+        printf("        Sortides correctes: %d\n",stats.ok_calls);   
+        printf("        Sortides incorrectes: %d\n",stats.error_calls);
+        printf("        Tiempo total: %d\n\n",stats.total_time);
 
         exit(0);
     }
@@ -247,13 +234,13 @@ while(1);
     write(1,"write:\n",7);
 
     printf("Lectura estadísticas Write: ");
-    read(fd,&stats,sizeof(struct t_info));
+    read(fd,&stats,sizeof(struct t_stats));
     printf("OK\nEstadísticas write:\n");
     printf("write:");
-    printf("        Numero entrades: %d\n",stats.num_entrades);
-    printf("        Sortides correctes: %d\n",stats.num_sortides_ok);   
-    printf("        Sortides incorrectes: %d\n",stats.num_sortides_error);
-    printf("        Tiempo total: %d\n\n",stats.durada_total);
+    printf("        Numero entrades: %d\n",stats.total_calls);
+    printf("        Sortides correctes: %d\n",stats.ok_calls);   
+    printf("        Sortides incorrectes: %d\n",stats.error_calls);
+    printf("        Tiempo total: %d\n\n",stats.total_time);
 
 
     printf("Reset estadísticas proceso actual: ");
@@ -262,19 +249,19 @@ while(1);
     else printf("OK\n");
 
     printf("Lectura estadísticas Write después del reset: ");
-    read(fd,&stats,sizeof(struct t_info));
+    read(fd,&stats,sizeof(struct t_stats));
     printf("OK\nEstadísticas write:\n");
     printf("write:");
-    printf("        Numero entrades: %d\n",stats.num_entrades);
-    printf("        Sortides correctes: %d\n",stats.num_sortides_ok);   
-    printf("        Sortides incorrectes: %d\n",stats.num_sortides_error);
-    printf("        Tiempo total: %d\n\n",stats.durada_total);
+    printf("        Numero entrades: %d\n",stats.total_calls);
+    printf("        Sortides correctes: %d\n",stats.ok_calls);   
+    printf("        Sortides incorrectes: %d\n",stats.error_calls);
+    printf("        Tiempo total: %d\n\n",stats.total_time);
 
     close(fd);
 
     printf("FIN JUEGO DE PRUEBAS");
 
-    exit(0);*/
+    exit(0);
 }
 
 

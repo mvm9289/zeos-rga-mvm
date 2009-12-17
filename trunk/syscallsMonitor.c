@@ -13,7 +13,7 @@ MODULE_DESCRIPTION("Syscalls Monitor.");
 
 int pid = 0;
 module_param(pid, int, 0);
-MODULE_PARM_DESC(pid, "Process identifier to monitor (default is current)");
+MODULE_PARM_DESC(pid, "Process identifier to monitor (default is pid of current process)");
 
 /* Monitor Initialization */
 static int __init syscallsMonitor_init(void) {

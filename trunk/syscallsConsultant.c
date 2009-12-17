@@ -41,10 +41,9 @@ int consultant_open(struct inode *i, struct file *f) {
     open = 1;
 
     first_pid = current->pid;
-    actual_process = find_task_by_pid(current->pid);
+    actual_process = current;
     monitor_syscall = OPEN_CALL;
 
-printk(KERN_EMERG "HOLA DOLA %d", current->pid);
     return 0;
 }
 
@@ -59,13 +58,6 @@ ssize_t consultant_read(struct file *f, char __user *buffer, size_t s, loff_t *o
 
     res = copy_to_user(buffer, &th_info->stats[monitor_syscall], size);
 
-printk(KERN_EMERG "entradas: %d\n", th_info->stats[monitor_syscall].total_calls);
-printk(KERN_EMERG "entradas good: %d\n", th_info->stats[monitor_syscall].ok_calls);
-printk(KERN_EMERG "entradas bad: %d\n", th_info->stats[monitor_syscall].error_calls);
-printk(KERN_EMERG "time: %lld\n", th_info->stats[monitor_syscall].total_time);
-printk(KERN_EMERG "pid: %d\n", th_info->stats[monitor_syscall].pid);
-printk(KERN_EMERG "pid2: %d\n", actual_process->pid);
-
     return (ssize_t)res;
 }
 
@@ -73,28 +65,28 @@ int consultant_ioctl(struct inode *i, struct file *f, unsigned int arg1, unsigne
     struct task_struct *task;
 
     switch (arg1) {
-        case 0:
+        case SWITCH_PROCESS:
             if(!arg2) actual_process = find_task_by_pid(first_pid);
             else actual_process = find_task_by_pid(*((int *)arg2));
 
             if (actual_process == NULL) return -ESRCH;
             break;
-        case 1:
+        case SWITCH_SYSCALL:
             monitor_syscall = (int)arg2;
             break;
-        case 2:
+        case RESET:
             reset_stats(((struct thread_info_extended *)actual_process->thread_info)->stats);
             break;
-        case 3:
+        case RESET_ALL:
             for_each_process(task) {
                 reset_stats(((struct thread_info_extended *)task->thread_info)->stats);
             }
             break;
-        case 4:
+        case ACTIVATE_MONITOR:
             if ((int)arg2 != ALL && ((int)arg2 < 0 || (int)arg2 > SYSCALLS_MONITORIZED-1)) return -EINVAL;
             activate_monitor((int)arg2);
             break;
-        case 5:
+        case DEACTIVATE_MONITOR:
             if ((int)arg2 != ALL && ((int)arg2 < 0 || (int)arg2 > SYSCALLS_MONITORIZED-1)) return -EINVAL;
             deactivate_monitor((int)arg2);
             break;
