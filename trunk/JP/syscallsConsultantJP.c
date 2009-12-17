@@ -16,6 +16,7 @@ int main() {
     struct t_info stats;
     int pid;
     int res;
+    int res2;
     int fd;
     int status = -1;
 
@@ -27,42 +28,99 @@ int main() {
     read(0, NULL, 1);
     printf("\nTests Runing...\n");
 
-    printf("-Abrir el dispositivo: ");
+    printf("Opening the device: ");
     fd=open("/dev/consultant",O_RDONLY, 0777);
     if(fd<0){
-        printf("Error abriendo el dispositivo\n");
+        printf("---> Error abriendo el dispositivo\n");
 	perror(buffer);
 	printf(buffer);
         exit(0);
     }
 
-    printf("OK\n");
+    printf("---> OK\n");
 
     /*printf("-Abrir el dispositivo otra vez: ");
     res=open("/dev/consultant",O_RDONLY,0777);
     if(res<0) printf("Error abriendo el dispositivo------>OK\n");*/
 
-    printf("-Activar monitorización: ");
+    printf("Enable monitorization: ");
     res=ioctl(fd,4,ALL);
-    if(res<0) printf("Error activar monitorizacion\n");
+    if(res<0) printf("---> Error activar monitorizacion\n");
+    else printf("---> OK\n");
 
 
     /*printf("Hacemos 1 Open incorrecto\n");
     open("hola.txt", O_RDWR, 0777);*/
     
-    printf("Hacemos 1 Open correcto + 1 close correcto\n");
+    printf("A right OPEN call + a right CLOSE call:\n");
     res = open("newFile", O_RDWR | O_CREAT, 0777);
-    close(res);
+    if(res > 0) printf("OK ---> OPEN\n");
+    res2 = close(res);
+    if(res2 > 0) printf("OK ---> CLOSE\n")
 
-    printf("-Lectura estadísticas Open: ");
+    printf("Reading OPEN statistics: ");
     read(fd,&stats,sizeof(struct t_info));
-    printf("OK\nEstadísticas Open:\n");
+    printf("----> OK\nCall statistics:\n");
     printf("OPEN:");
-    printf("        Numero entrades: %d\n",stats.num_entrades);
-    printf("        Sortides correctes: %d\n",stats.num_sortides_ok);
-    printf("        Sortides incorrectes: %d\n",stats.num_sortides_error);
-    printf("        Tiempo total: %d\n",stats.durada_total);
-    printf("        PID: %d\n\n", stats.pid);
+    printf("        Num calls: %d\n",stats.num_entrades);
+    printf("        Ok calls: %d\n",stats.num_sortides_ok);
+    printf("        Bad calls: %d\n",stats.num_sortides_error);
+    printf("        Total time: %d\n",stats.durada_total);
+    //printf("        PID: %d\n\n", stats.pid);
+
+    printf("Disable WRITE call monitorization: ");
+    ioct=ioctl(fd,5,WRITE_CALL);
+    if(ioct<0) printf("---> Error %d\n", ioct);    
+    else printf("---> OK\n");
+
+    printf("Reset statistics of current process: ");
+    res=ioctl(fd,2,0);
+    if(res<0) printf("---> ioctl error\n");
+    else printf("---> OK\n");
+
+    printf("Reading OPEN statistics again checking the reset: ");
+    read(fd,&stats,sizeof(struct t_info));
+    printf("----> Read OK\nCall statistics:\n");
+    printf("OPEN:");
+    printf("        Num calls: %d\n",stats.num_entrades);
+    printf("        Ok calls: %d\n",stats.num_sortides_ok);
+    printf("        Bad calls: %d\n",stats.num_sortides_error);
+    printf("        Total time: %d\n",stats.durada_total);
+   //printf("        PID: %d\n\n", stats.pid);
+
+    printf("Changing syscall to WRITE (enabling and desabling monitorization to avoid printfs): ");
+    res = ioctl(fd,1,WRITE_CALL);
+    if(res < 0) printf("Error changing the syscall to monitorize");    
+
+    printf("Three right WRITE calls: ");
+
+    printf("Enable WRITE call monitorization: ---> OK");
+    ioct=ioctl(fd,4,WRITE_CALL);
+
+    write(1,"Writing...\n",11);
+    write(1,"Writing...\n",11);
+    write(1,"Writing...\n",11);
+
+    ioct=ioctl(fd,5,WRITE_CALL);
+    printf("Disable WRITE call monitorization: ");
+    if(ioct<0) printf("---> Error %d\n", ioct);    
+    else printf("---> OK\n");
+   
+    printf("Reading WRITE statistics again checking the reset: ");
+    read(fd,&stats,sizeof(struct t_info));
+    printf("----> Read OK\nCall statistics:\n");
+    printf("WRITE:");
+    printf("        Num calls: %d\n",stats.num_entrades);
+    printf("        Ok calls: %d\n",stats.num_sortides_ok);
+    printf("        Bad calls: %d\n",stats.num_sortides_error);
+    printf("        Total time: %d\n",stats.durada_total);
+    //printf("        PID: %d\n\n", stats.pid);
+    
+
+    // ahora iba a hacer un fork haciendo unos writes, reseteando todo y volviendo a mostrar los writes del hijo, muriendo, sacando al padre del wait y mostrando de nuevo los writes para ver que se han reseteado todos... después ya no se, no había pensado tanto xDD
+
+
+
 close(fd);
 unlink("newFile");
 while(1);

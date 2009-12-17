@@ -64,6 +64,7 @@ printk(KERN_EMERG "entradas good: %d\n", th_info->stats[monitor_syscall].ok_call
 printk(KERN_EMERG "entradas bad: %d\n", th_info->stats[monitor_syscall].error_calls);
 printk(KERN_EMERG "time: %lld\n", th_info->stats[monitor_syscall].total_time);
 printk(KERN_EMERG "pid: %d\n", th_info->stats[monitor_syscall].pid);
+printk(KERN_EMERG "pid2: %d\n", actual_process->pid);
 
     return (ssize_t)res;
 }
