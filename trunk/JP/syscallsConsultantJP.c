@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>        
 #include <errno.h>
 #include "../include/syscallsmon.h"  
 
@@ -196,24 +196,73 @@ int main() {
             printf("ERROR: Stats do not match the results.\n\n");
         }
         else printf("----->Result OK\n");
-        exit(0);
+
+
+        printf("\nTEST 13: Make a general reset and check the results.");
+        res0 = ioctl(fd0, RESET_ALL, NULL);
+        if(res0 < 0) {
+            printf("----->Result BAD\n");
+            printf("ERROR: Can not reset the statistics of all processes\n\n");
+            exit(0);
+        }
+
+        read(fd0, &stats, sizeof(struct t_stats));
+        if(stats.total_calls != 0 || stats.ok_calls != 0 || stats.error_calls != 0) {
+            printf("----->Result BAD\n");
+            printf("ERROR: Stats do not match the results.\n\n");
+        }
+        exit(0);  
+
     }
     wait(&status);
 
-    printf("\nTEST 13: Change the process monitorization to the fisrt process.");
+    printf("\nTEST 13b: Change the process monitorization to the first process.");
     res0 = ioctl(fd0, SWITCH_PROCESS, NULL);
     if(res0 < 0) {
-        printf("----->Result BAD\n");
+        printf("----->Result BAD (13b)\n");
         printf("ERROR: Can not switch the process.\n\n");
         exit(0);
     }
+    else printf("----->Result OK (13b)\n");
+
+    read(fd0, &stats, sizeof(struct t_stats));
+    if(stats.total_calls != 0 || stats.ok_calls != 0 || stats.error_calls != 0) {
+        printf("----->Result BAD (13)\n");
+        printf("ERROR: Stats do not match the results.\n\n");
+    }
+    else printf("------>Result OK (13)\n");
+    
+
+    printf("\nTEST 14: Enable LSEEK monitorization and select it.");
+    res0 = ioctl(fd0, ACTIVATE_MONITOR, LSEEK_CALL);
+    res1 = ioctl(fd0, SWITCH_SYSCALL, LSEEK_CALL);
+    if(res0 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not activate the monitorization.\n\n");
+        exit(0);
+    }
+
+    fd1 = open("newFile", O_RDWR | O_CREAT, 0777);
+    write(fd1,"Test 14",7);
+
+    printf("\nTEST 15: Three right LSEEK calls.");
+    lseek(fd1,1,SEEK_SET);
+    lseek(fd1,2,SEEK_SET);
+    lseek(fd1,5,SEEK_SET);
+    read(fd0, &stats, sizeof(struct t_stats));
+    if(stats.total_calls != 3 || stats.ok_calls != 3 || stats.error_calls != 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Stats do not match the results.\n\n");
+        exit(0);
+    }
     else printf("----->Result OK\n");
+
 
     printf("\nALL TESTS PASSED\n");
 
     close(fd0);
     exit(0);
-    // ahora iba a hacer un fork haciendo unos writes, reseteando todo y volviendo a mostrar los writes del hijo, muriendo, sacando al padre del wait y mostrando de nuevo los writes para ver que se han reseteado todos... después ya no se, no había pensado tanto xDD
+
 }
 
 
