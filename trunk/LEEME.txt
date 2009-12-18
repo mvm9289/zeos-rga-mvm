@@ -39,8 +39,6 @@ DISTRIBUCION DE LOS DIRECTORIOS:
         para el modulo 2)
     jp2_MA06.h (definición de constantes y estructura
         t_info usada por jp2_MA06)
-    jp2_JU02.c (código del juego de pruebas del grupo JU02
-        para el modulo 2)
 
 
 
@@ -223,16 +221,6 @@ Para el Modulo 2 (syscallsConsultant):
             "make jp"
             "sudo ./jp2_MA06"
             "Ctrl + C"
-            "sudo make remove"
-            "make clean"
-
-    jp2_JU02: Juego de pruebas del grupo JU02.
-        Para ejecutarlo hacer:
-            "make clean"
-            "make"
-            "sudo make install"
-            "make jp"
-            "sudo ./jp2_JU2"
             "sudo make remove"
             "make clean"
             

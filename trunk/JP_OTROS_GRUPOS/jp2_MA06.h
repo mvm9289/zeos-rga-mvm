@@ -1,7 +1,7 @@
 #define OPEN 0
-#define WRITE 2
-#define LSEEK 3
-#define CLOSE 1
+#define WRITE 1
+#define LSEEK 2
+#define CLOSE 3
 #define CLONE 4
 #define TOTES -1
 

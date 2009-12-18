@@ -3,9 +3,9 @@
 #define __SYSCALLS_MON__
 
 #define OPEN_CALL 0
-#define CLOSE_CALL 1
-#define WRITE_CALL 2
-#define LSEEK_CALL 3
+#define CLOSE_CALL 3
+#define WRITE_CALL 1
+#define LSEEK_CALL 2
 #define CLONE_CALL 4
 #define ALL -1
 

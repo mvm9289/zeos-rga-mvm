@@ -85,7 +85,7 @@ int main(){
   printf("WRITE\t\t29\t\t28\t\t1\n");
   printf("LSEEK\t\t2\t\t1\t\t1\n");
   printf("CLOSE\t\t2\t\t1\t\t1\n");
-  printf("CLONE\t\t3\t\t2\t\t1\n");
+  printf("CLONE\t\t2\t\t1\t\t1\n");
 
   wait(&status);
 

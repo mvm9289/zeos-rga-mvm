@@ -9,9 +9,9 @@
 #include "jp2_MA06.h"
 
 char names_syscalls[5][5] = { 'O','P','E','N','\0',
-			'C','L','O','S','E',
 			'W','R','I','T','E',
 			'L','S','E','E','K',
+			'C','L','O','S','E',
 			'C','L','O','N','E'};
 
 void funcion_clone(){}
