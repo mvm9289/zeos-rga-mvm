@@ -22,7 +22,7 @@ static int __init syscallsMonitor_init(void) {
     if (!pid) pid = current->pid;
 
     for_each_process(task) {
-        ((struct thread_info_extended *)task->thread_info)->pid = STATS_NO_INIT;
+        reset_stats(((struct thread_info_extended *)task->thread_info)->stats);
     }
 
     old_sys_calls[OPEN_CALL] = sys_call_table[SYSCALL_OPEN];

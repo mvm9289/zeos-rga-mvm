@@ -76,6 +76,9 @@ int consultant_ioctl(struct inode *i, struct file *f, unsigned int arg1, unsigne
 
             if (task == NULL) return -ESRCH;
             else actual_process = task;
+
+            if (((struct thread_info_extended *)actual_process->thread_info)->pid != actual_process->pid)
+                reset_stats(((struct thread_info_extended *)actual_process->thread_info)->stats);
             break;
         case SWITCH_SYSCALL:
             monitor_syscall = (int)arg2;

@@ -12,8 +12,6 @@
 #define SYSCALL_CLOSE 6
 #define SYSCALL_CLONE 120
 
-#define STATS_NO_INIT -1
-
 #define proso_rdtsc(low,high) \
 __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high))
 
