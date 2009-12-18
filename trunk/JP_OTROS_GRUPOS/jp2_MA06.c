@@ -119,34 +119,6 @@ void inserta_moduls(){
   wait(&status);
 }
 
-
-
-void elimina_moduls(){
-  int pid;
-  int status;
-
-  pid = fork();
-  if(pid == 0){
-    printf("Eliminem el modul syscallsConsultant\n");
-    execlp("rmmod", "rmmod", "syscallsConsultant", '\0');
-  }
-  wait(&status);
-
-  pid = fork();
-  if(pid == 0){
-    printf("Eliminem el dispositiu\n");
-    execlp("rm", "rm", "/dev/consultant", '\0');
-  }
-  wait(&status);
-
-  pid = fork();
-  if(pid == 0){
-    printf("Eliminem el modul syscallsMonitor\n");
-    execlp("rmmod", "rmmod", "syscallsMonitor", '\0');
-  }
-  wait(&status);
-}
-
 void pinta_info(struct t_info *info){
   printf("num_entrades: %d\n", info->num_entrades);
   printf("num_sortides_ok: %d\n", info->num_sortides_ok);
@@ -188,11 +160,8 @@ int main(){
   fd = open("/dev/consultant", O_RDONLY);
   if(fd < 0){
     printf("\nError a l'obrir el dispositiu\n\n");
-    elimina_moduls();
     printf("\nFi joc de proves\n\n");
     printf("Per finalitzar el joc de proves, premi ctrl + c\n");
-    printf("Si no s'ha pogut eliminar el modul syscallsMonitor, executi:\n");
-    printf("sudo rmmod syscallsMonitor\n");
     while(1);
   }
 
@@ -340,11 +309,8 @@ int main(){
   close(fd);
 
   printf("\nFi joc de proves\n\n");
-  elimina_moduls();
 
   printf("Per finalitzar el joc de proves, premi ctrl + c\n");
-  printf("Si no s'ha pogut eliminar el modul syscallsMonitor, executi:\n");
-  printf("sudo rmmod syscallsMonitor\n");
 
   unlink("hijo1.txt");
   unlink("hijo6.txt");

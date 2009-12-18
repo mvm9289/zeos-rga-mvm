@@ -1,0 +1,240 @@
+MA07 -- LEEME
+
+
+
+DISTRIBUCION DE LOS DIRECTORIOS:
+
+"./":
+
+    LEEME.txt
+    Makefile
+    syscallsMonitor.c (código del modulo 1)
+    syscallsConsultant.c (código del modulo 2)
+
+
+"./include/":
+
+    syscallsMonitor.h (cabeceras y estructuras del
+        modulo 1)
+    syscallsConsultant.h (cabeceras y estructuras del
+        modulo 2)
+    syscallsmon.h (definición de constantes y estructura
+        t_stats usada por syscallsMonitor,
+        syscallsConsultant y algunos juegos de pruebas)
+
+
+"./JP/": (juegos de pruebas propios)
+
+    syscallsMonitorJP.c (código del juego de pruebas para
+        el modulo 1)
+    syscallsConsultantJP.c (código del juego de pruebas
+        para el modulo 2)
+
+
+"./JP_OTROS_GRUPOS/": (juegos de pruebas de otros grupos)
+
+    jp1_MA06.c (código del juego de pruebas del grupo MA06
+        para el modulo 1)
+    jp2_MA06.c (código del juego de pruebas del grupo MA06
+        para el modulo 2)
+    jp2_MA06.h (definición de constantes y estructura
+        t_info usada por jp2_MA06)
+    jp2_JU02.c (código del juego de pruebas del grupo JU02
+        para el modulo 2)
+
+
+
+
+
+INSTRUCCIONES PARA EJECUTAR LOS JUEGOS DE PRUEBA:
+
+
+*Todas las instrucciones parten de la base que la carpeta
+esta limpia, es decir, despues de ejecutar en consola
+"make clean".
+
+
+
+JUEGO DE PRUEBAS MODULO 1 (syscallsMonitor):
+
+Antes de nada, hacemos "make", y "make jp" en la linea
+de comandos para compilar los modulos y los juegos de
+prueba.
+
+Una vez hecho eso, tendremos los modulos compilados y
+listos para ser instalados y ya se podrán ejecutar los
+juegos de prueba.
+
+Seguidamente ejecutamos el comando "./syscallsMonitorJP"
+para empezar los juegos de prueba. Una vez lanzado,
+veremos que nos muestra un PID y nos remarca que
+presionemos ENTER para empezar los tests. Antes de
+presionar enter, abriremos una nueva pestaña de la linea
+de comandos y ejecutaremos:
+    
+    "sudo insmod syscallsMonitor.ko pid=PID" ----> Siendo
+        PID el marcado por el juego de pruebas que está
+        esperando en la otra pestaña.
+        
+Una vez hecho eso, volvemos a la pestaña del juego de
+pruebas y presionamos, ahora si, la tecla ENTER. Este
+hecho lanzará el juego de pruebas en si. Lo que se hace
+dentro del jp es, básicamente, varias llamadas a sistema,
+correctas e incorrectas, que servirán para que este
+modulo que estamos probando añada información sobre esas
+llamadas para, posteriormente, comprobar que ha
+almacenado dicha información con éxito (es decir, que
+los resultados son los esperados).
+
+Para saber si los resultados son los correctos, dentro
+del juego de pruebas se contabilizará de forma manual
+las estadísticas para, así, compararlas una vez se haya
+hecho el "rmmod" del modulo (al final del jp).
+Para saber si cada llamada a sistema ha devuelto el
+resultado esperado, el juego de pruebas nos mostrará un
+mensaje por pantalla al lado del TEST correspondiente con
+las palabras "Execution OK" o, por el contrario,
+"Execution BAD".
+
+Al final del juego de pruebas, éste proceso se quedará
+en un bucle infinito hasta que nosotros decidamos matarlo
+con "Ctrl + c". Antes de hacerlo, ejecutaremos, en la
+otra pestaña (donde habíamos ejecutado el "insmod"), los
+comandos:
+   
+    "sudo rmmod syscallsMonitor"
+    "dmesg"
+
+Con esto, tendremos la información del proceso con pid = PID
+(nuestro JP) con el fin de poderla comparar con los resultados
+esperados, que serán mostrados al final del juego de pruebas.
+Una vez comprobado que la información es correcta,
+procederemos a matar el JP presionando "Ctrl + c".
+     
+
+RESUMEN:
+
+    (pestaña 1 de terminal):
+    "make clean"
+    "make"
+    "make jp"
+    "./syscallsMonitorJP"
+
+    (pestaña 2 de terminal):
+    "sudo insmod syscallsMonitor.ko pid=PID" (siendo PID el
+        pid que nos muestra el JP en la pestaña 1 de terminal)
+
+    (pestaña 1 de terminal):
+    "presionar ENTER"
+
+    (pestaña 2 de terminal):
+    "sudo rmmod syscallsMonitor"
+    "dmesg"
+
+    (COMPROBAR QUE LOS RESULTADOS DE LA PESTAÑA 1 COINCIDEN
+        CON LOS DE LA PESTAÑA 2)
+
+    (pestaña 1 de terminal):
+    "Ctrl + C"
+    "make clean"
+
+
+
+JUEGO DE PRUEBAS MODULO 2 (syscallsConsultant):
+
+Esta vez, antes de nada, haremos "make", "sudo make install"
+y "make jp" en la linea de comandos para compilar e
+instalar los modulos y los juegos de prueba.
+
+Una vez hecho eso, tendremos los modulos compilados
+e instalados y ya se podrán ejecutar los juegos de prueba.
+
+Cuando ya se tenga todo listo para empezar, ejecutamos
+el comando "sudo ./syscallsConsultantJP" que lanzará el
+juego de pruebas del segundo modulo. Este juego de pruebas
+se encagará de ejecutar varias operaciones que harán que
+se vaya añadiendo información mediante la intersección
+de las sys_calls por parte del modulo 1. A parte de estas
+sys_calls, también se probarán las diferentes operaciones
+que nos facilita el modulo 2, como la llamada ioctl (para
+gestionar la información) o la llamada read (para leer la
+información de la llamada que estemos monitorizando). Este
+juego de pruebas nos dirá, al final de cada TEST parcial,
+si ha ido bien o mal según haya habido un error esperado
+o inesperado o bien porque la información leida mediante
+el "read" no coincide con la recogida "manualmente" en
+tiempo de ejecución.
+
+Una vez ejecutado el juego de pruebas para el segundo modulo,
+para eliminar los archivos creados mediante los diferentes
+"make" que hemos ejecutado al principio, disponemos de los
+siguientes comandos:
+
+    "sudo make remove" nos desinstalará los modulos y
+        eliminará el fichero creado en "/dev".
+    "make clean" nos eliminará los demás archivos, como por
+        ejemplo los ejecutables de los JP.    
+
+RESUMEN:
+
+    "make clean"
+    "make"
+    "sudo make install"
+    "make jp"
+    "sudo ./syscallsConsultantJP"
+    "sudo make remove"
+    "make clean"
+
+
+
+OTROS JUEGOS DE PRUEBA:
+
+A parte de estos dos juegos de prueba (propios) se han
+añadido otros juegos de prueba de otros grupos:
+
+Para el Modulo 1 (syscallsMonitor):
+
+    jp1_MA06: Juego de pruebas del grupo MA06.
+        Para ejecutarlo hacer:
+            (pestaña 1 de terminal):
+            "make clean"
+            "make"
+            "make jp"
+            "sudo ./jp1_MA06"
+            "presionar ENTER"
+
+            (pestaña 2 de terminal):
+            "sudo rmmod syscallsMonitor"
+            "dmesg"
+
+            (COMPROBAR QUE LOS RESULTADOS DE LA PESTAÑA 1
+            COINCIDEN CON LOS DE LA PESTAÑA 2)
+
+            (pestaña 1 de terminal):
+            "Ctrl + C".
+            "make clean"
+
+Para el Modulo 2 (syscallsConsultant):
+
+    jp2_MA06: Juego de pruebas del grupo MA06.
+        Para ejecutarlo hacer:
+            "make clean"
+            "make"
+            "make jp"
+            "sudo ./jp2_MA06"
+            "Ctrl + C"
+            "sudo make remove"
+            "make clean"
+
+    jp2_JU02: Juego de pruebas del grupo JU02.
+        Para ejecutarlo hacer:
+            "make clean"
+            "make"
+            "sudo make install"
+            "make jp"
+            "sudo ./jp2_JU2"
+            "sudo make remove"
+            "make clean"
+            
+
+FIN DEL ARCHIVO LEEME.
