@@ -125,7 +125,6 @@ int main() {
         exit(0);
     }
     else printf("----->Result OK\n");
-
     unlink("newfile");
 
     printf("\nTEST 9: Reset statistics of current process.");
@@ -191,49 +190,47 @@ int main() {
             printf("ERROR: Can not switch the syscall.\n\n");
             exit(0);
         }
-        if(stats.total_calls != 3 || stats.ok_calls != 0 || stats.error_calls != 3) {
+        else if(stats.total_calls != 3 || stats.ok_calls != 0 || stats.error_calls != 3) {
             printf("----->Result BAD\n");
             printf("ERROR: Stats do not match the results.\n\n");
+            exit(0);
         }
         else printf("----->Result OK\n");
 
 
         printf("\nTEST 13: Make a general reset and check the results.");
-        res0 = ioctl(fd0, RESET_ALL, NULL);
+        res0 = ioctl(fd0, RESET_ALL, 0);
+        read(fd0, &stats, sizeof(struct t_stats));
         if(res0 < 0) {
             printf("----->Result BAD\n");
             printf("ERROR: Can not reset the statistics of all processes\n\n");
-            exit(0);
         }
-
-        read(fd0, &stats, sizeof(struct t_stats));
-        if(stats.total_calls != 0 || stats.ok_calls != 0 || stats.error_calls != 0) {
+        else if(stats.total_calls != 0 || stats.ok_calls != 0 || stats.error_calls != 0) {
             printf("----->Result BAD\n");
             printf("ERROR: Stats do not match the results.\n\n");
         }
+        else printf("----->Result OK\n");
         exit(0);  
 
     }
     wait(&status);
 
-    printf("\nTEST 13b: Change the process monitorization to the first process.");
+    printf("\nTEST 14: Change the process monitorization to the first process and check the general reset.");
     res0 = ioctl(fd0, SWITCH_PROCESS, NULL);
+    read(fd0, &stats, sizeof(struct t_stats));
     if(res0 < 0) {
-        printf("----->Result BAD (13b)\n");
+        printf("----->Result BAD\n");
         printf("ERROR: Can not switch the process.\n\n");
         exit(0);
     }
-    else printf("----->Result OK (13b)\n");
-
-    read(fd0, &stats, sizeof(struct t_stats));
-    if(stats.total_calls != 0 || stats.ok_calls != 0 || stats.error_calls != 0) {
-        printf("----->Result BAD (13)\n");
+    else if(stats.total_calls != 0 || stats.ok_calls != 0 || stats.error_calls != 0) {
+        printf("----->Result BAD\n");
         printf("ERROR: Stats do not match the results.\n\n");
     }
-    else printf("------>Result OK (13)\n");
+    else printf("------>Result OK\n");
     
 
-    printf("\nTEST 14: Enable LSEEK monitorization and select it.");
+    printf("\nTEST 15: Enable LSEEK monitorization and select it.");
     res0 = ioctl(fd0, ACTIVATE_MONITOR, LSEEK_CALL);
     res1 = ioctl(fd0, SWITCH_SYSCALL, LSEEK_CALL);
     if(res0 < 0) {
@@ -241,21 +238,32 @@ int main() {
         printf("ERROR: Can not activate the monitorization.\n\n");
         exit(0);
     }
+    else if(res1 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not switch the syscall.\n\n");
+        exit(0);
+    }
+    else printf("------>Result OK\n");
 
-    fd1 = open("newFile", O_RDWR | O_CREAT, 0777);
-    write(fd1,"Test 14",7);
-
-    printf("\nTEST 15: Three right LSEEK calls.");
+    printf("\nTEST 16: Open a file and do three right LSEEK calls.");
+    fd1 = open("newfile", O_RDWR | O_CREAT, 0777);
     lseek(fd1,1,SEEK_SET);
     lseek(fd1,2,SEEK_SET);
     lseek(fd1,5,SEEK_SET);
     read(fd0, &stats, sizeof(struct t_stats));
-    if(stats.total_calls != 3 || stats.ok_calls != 3 || stats.error_calls != 0) {
+    if(fd1 < 0) {
+        printf("----->Result BAD\n");
+        printf("ERROR: Can not create a file.\n\n");
+        exit(0);
+    }
+    else if(stats.total_calls != 3 || stats.ok_calls != 3 || stats.error_calls != 0) {
         printf("----->Result BAD\n");
         printf("ERROR: Stats do not match the results.\n\n");
         exit(0);
     }
     else printf("----->Result OK\n");
+    close(fd1);
+    unlink("newfile");
 
 
     printf("\nALL TESTS PASSED\n");

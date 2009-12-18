@@ -18,9 +18,9 @@ struct task_struct *actual_process;
 int monitor_syscall;
 
 /* Consultant Operations */
+int consultant_open(struct inode *i, struct file *f);
 ssize_t consultant_read(struct file *f, char __user *buffer, size_t s, loff_t *off);
 int consultant_ioctl(struct inode *i, struct file *f, unsigned int arg1, unsigned long arg2);
-int consultant_open(struct inode *i, struct file *f);
 int consultant_release(struct inode *i, struct file *f);
 
 struct file_operations consultant_ops = {

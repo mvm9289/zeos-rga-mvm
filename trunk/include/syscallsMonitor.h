@@ -44,10 +44,10 @@ int syscall_pos_of[SYSCALLS_MONITORIZED] = {SYSCALL_OPEN, SYSCALL_CLOSE, SYSCALL
 
 /* Monitor Operations */
 long new_sys_open (const char __user *filename, int flags, int mode);
-ssize_t new_sys_write(unsigned int fd, const char __user * buf, size_t count);
-int new_sys_clone(struct pt_regs regs);
 long new_sys_close(unsigned int fd);
+ssize_t new_sys_write(unsigned int fd, const char __user * buf, size_t count);
 off_t new_sys_lseek(unsigned int fd, off_t offset, unsigned int origin);
+int new_sys_clone(struct pt_regs regs);
 
 void activate_monitor(int syscall);
 void deactivate_monitor(int syscall);

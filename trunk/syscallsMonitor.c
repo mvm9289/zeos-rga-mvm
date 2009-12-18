@@ -37,7 +37,7 @@ static int __init syscallsMonitor_init(void) {
     new_sys_calls[LSEEK_CALL] = (void *) new_sys_lseek;
     new_sys_calls[CLONE_CALL] = (void *) new_sys_clone;
 
-    activate_monitor(-1);
+    activate_monitor(ALL);
     printk(KERN_EMERG "\nSyscalls Monitor Module loaded!\n\n");
 
     return 0;
@@ -176,7 +176,7 @@ int new_sys_clone(struct pt_regs regs) {
 
 /* Monitor Download */
 static void __exit syscallsMonitor_exit(void) {
-    deactivate_monitor(-1);
+    deactivate_monitor(ALL);
     print_stats();
     printk(KERN_EMERG "\nSyscalls Monitor Module downloaded!\n\n");
 }
